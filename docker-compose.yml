@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: app_multimodal_db
+    environment:
+      POSTGRES_DB: mhu
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: app_multimodal_backend
+    environment:
+      DATABASE_URL: postgresql://postgres:admin1234@postgres:5432/mhu
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - app_network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    command: ["sh", "-c", "sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+
+# Volúmenes persistentes
+volumes:
+  postgres_data:
+
+# Red para comunicación entre contenedores
+networks:
+  app_network:
+    driver: bridge
