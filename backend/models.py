@@ -9,5 +9,3 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-
-    phqs = relationship("Phq", back_populates="user")  # lista de PHQ asociados a este usuario

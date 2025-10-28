@@ -1,8 +1,6 @@
-from models import Phq
 from models import User
 
 from schemas import UserCreate
-from schemas import PhqCreate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi import HTTPException
