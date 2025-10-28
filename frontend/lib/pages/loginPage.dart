@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/registerPage.dart';
+import 'package:myapp/api_service.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +15,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final ApiService _apiService = ApiService();
+
   bool _isPasswordVisible = false;
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
+                    // actualizar esto para que use el backend
                     onPressed: () {
                       // Validacion rápida al poner "a" en ambas
                       if (_emailController.text == 'a' &&
