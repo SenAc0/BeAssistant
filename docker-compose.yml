@@ -1,12 +1,11 @@
-version: '3.8'
 
 services:
   # Base de datos PostgreSQL
   postgres:
     image: postgres:15
-    container_name: app_multimodal_db
+    container_name: beacon_postgres
     environment:
-      POSTGRES_DB: mhu
+      POSTGRES_DB: beacon_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin1234
     ports:
@@ -22,9 +21,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: app_multimodal_backend
+    container_name: beacon_backend
     environment:
-      DATABASE_URL: postgresql://postgres:admin1234@postgres:5432/mhu
+      DATABASE_URL: postgresql://postgres:admin1234@postgres:5432/beacon_db
     ports:
       - "8000:8000"
     depends_on:
