@@ -1,8 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <!-- Foreground service permission for Android 9+ when starting a foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Needed if you want the app to restart scanning after device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Android 13+ notifications permission (request at runtime) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:label="myapp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,6 +46,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+       <!-- Beacon service (AltBeacon / Android Beacon Library) - many beacon libs require this service entry
+           If you are not using a library that depends on org.altbeacon, you can remove this. -->
+       <service
+          android:name="org.altbeacon.beacon.service.BeaconService"
+          android:enabled="true"
+          android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/noHecho.dart';
+import 'package:myapp/pages/temporalDetector.dart';
 
 class ReunionesApp extends StatelessWidget {
   const ReunionesApp({super.key});
@@ -110,7 +111,7 @@ class ListaReunionesScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const noHechoScreen(),
+                builder: (context) => const TemporalDetector(),
               ),
             );
           }
