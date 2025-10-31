@@ -19,7 +19,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isPasswordVisible = false;
 
+  void loginUser() async {
+    String email = _emailController.text;
+    String password = _passwordController.text;
 
+    bool success = await _apiService.login(email, password);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicio de sesión exitoso')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ListaReunionesScreen(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al iniciar sesión')),
+      );
+    }
+  }
 
 
   @override
@@ -38,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: const AssetImage('../assets/images/beacon.png'),
+                  backgroundImage: const AssetImage('assets/images/beacon.png'),
                 ),
                 const SizedBox(height: 10),
 
@@ -134,30 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     // actualizar esto para que use el backend
-                    onPressed: () {
-                      // Validacion rápida al poner "a" en ambas
-                      if (_emailController.text == 'a' &&
-                          _passwordController.text == 'a') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ListaReunionesScreen(),
-                          ),
-                        ); // pantalla a cambiar (inicio o verificación)
-                      }
-                      // Validacion normal
-                      if (_formKey.currentState!.validate()) {
-                        // Aquí lógica de autenticación
- 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ListaReunionesScreen(), // pantalla a cambiar
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: loginUser,
                     child: const Text(
                       'Iniciar sesión',
                       style: TextStyle(fontSize: 16),

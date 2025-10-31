@@ -7,8 +7,20 @@ from pydantic import BaseModel
 from typing import List
 from fastapi import Query
 
-# ¡IMPORTANTE! Crear todas las tablas automáticamente
-models.Base.metadata.create_all(bind=engine)
+
+
+##############################
+
+# Crear todas las tablas automáticamente (esto crea lo que esta en models.py)
+# ESTO ES TEMPORAL, DEBERIAMOS USAR ALEMBIC PARA MIGRACIONES
+
+
+# models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
+
+
+# models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
+
+##############################
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Crear la aplicación
@@ -17,7 +29,7 @@ app = FastAPI()
 # Endpoint de prueba
 @app.get("/")
 def read_root():
-    return {"message": "Hola, este es mi backend con FastAPI"}
+    return {"message": "FastAPI"}
 
 
 

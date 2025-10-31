@@ -6,15 +6,25 @@ class ApiService {
 
   // Setear la url para conectar con el backend
   
+
+  // En caso de usar un emulador de Android, usar esta dirección IP para localhost
   //static const String baseUrl = 'http://10.0.2.2:8000';
+
+
+  // En caso de usar ngrok, insertar la url ngrok y usar esto
   //static const String baseUrl = 'https://7c599f4c595a.ngrok-free.app';
 
-  Future<bool> register(String email, String password) async {
+
+  //En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
+  static const String baseUrl = 'http://192.168.0.178:8000';
+
+  Future<bool> register(String name, String email, String password) async {
+
     final url = Uri.parse('$baseUrl/register');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'name': name, 'email': email, 'password': password}),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {

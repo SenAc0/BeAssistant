@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/api_service.dart';
+import 'package:myapp/pages/loginPage.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,9 +16,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final ApiService _apiService = ApiService();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+
+
+  void registerUser() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    String name = _nameController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    bool success = await _apiService.register(name, email, password);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registro exitoso')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const LoginScreen(), // pantalla a cambiar (inicio o verificación)
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al registrar')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,18 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // Aquí iría la lógica de registro
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const Placeholder(), // pantalla a cambiar (inicio o verificación)
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: registerUser,
                     child: const Text(
                       'Crear cuenta',
                       style: TextStyle(fontSize: 16),
