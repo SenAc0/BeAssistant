@@ -1,6 +1,5 @@
-from models import User, Meeting, Attendance
-
-from schemas import UserCreate, MeetingCreate
+from models import User, Meeting, Attendance, Beacon
+from schemas import UserCreate, MeetingCreate, BeaconCreate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi import HTTPException
@@ -165,8 +164,52 @@ def list_attendance_for_user(db: Session, user_id: int):
 
 
 
+# ================= Beacon =================
+def create_beacon(db: Session, beacon: BeaconCreate):
+    db_beacon = Beacon(
+        major=beacon.major,
+        minor=beacon.minor,
+        location=beacon.location
+    )
+    db.add(db_beacon)
+    db.commit()
+    db.refresh(db_beacon)
+    return db_beacon
 
+def get_beacons(db: Session):
+    return db.query(Beacon).all()
 
+def get_beacon(db: Session, beacon_id: int):
+    return db.query(Beacon).filter(Beacon.id == beacon_id).first()
+
+def delete_beacon(db: Session, beacon_id: int):
+    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+    if beacon:
+        db.delete(beacon)
+        db.commit()
+    return beacon
+
+def update_beacon(db: Session, beacon_id: int, beacon_data: BeaconCreate):
+    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+    if not beacon:
+        return None
+    beacon.major = beacon_data.major
+    beacon.minor = beacon_data.minor
+    beacon.location = beacon_data.location
+    # fecha de último uso
+    beacon.last_used = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(beacon)
+    return beacon
+
+def update_beacon_last_used(db: Session, beacon_id: int):
+    # Actualiza fecha de último uso del beacon sin modificar otros datos
+    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+    if beacon:
+        beacon.last_used = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(beacon)
+    return beacon
 
 
 

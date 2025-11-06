@@ -18,7 +18,7 @@ from fastapi import Query
 # models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
 
 
-# models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
+models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
 
 ##############################
 
@@ -98,3 +98,34 @@ def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get
 def my_attendance(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
     return crud.list_attendance_for_user(db, user_id=current_user.id)
 
+
+
+# ================= Beacon =================
+@app.post("/beacons", response_model=schemas.Beacon)
+def create_beacon(beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
+    return crud.create_beacon(db, beacon)
+
+@app.get("/beacons", response_model=list[schemas.Beacon])
+def list_beacons(db: Session = Depends(get_db)):
+    return crud.get_beacons(db)
+
+@app.get("/beacons/{beacon_id}", response_model=schemas.Beacon)
+def get_beacon(beacon_id: int, db: Session = Depends(get_db)):
+    beacon = crud.get_beacon(db, beacon_id)
+    if not beacon:
+        raise HTTPException(status_code=404, detail="Beacon not found")
+    return beacon
+
+@app.put("/beacons/{beacon_id}", response_model=schemas.Beacon)
+def update_beacon(beacon_id: int, beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
+    updated = crud.update_beacon(db, beacon_id, beacon)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Beacon not found")
+    return updated
+
+@app.delete("/beacons/{beacon_id}")
+def delete_beacon(beacon_id: int, db: Session = Depends(get_db)):
+    deleted = crud.delete_beacon(db, beacon_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Beacon not found")
+    return {"message": "Beacon deleted successfully"}

@@ -61,3 +61,20 @@ class Attendance(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ========= Beacon =========
+class BeaconBase(BaseModel):
+    major: int
+    minor: int
+    location: str
+
+class BeaconCreate(BeaconBase):
+    pass
+
+class Beacon(BeaconBase):
+    id: int
+    last_used: datetime   # 🕒 mismo formato que en Attendance.marked_at
+
+    class Config:
+        from_attributes = True

@@ -60,3 +60,13 @@ class Attendance(Base):
     # Relationships
     user = relationship("User", back_populates="attendances")
     meeting = relationship("Meeting", back_populates="attendances")
+
+
+class Beacon(Base):
+    __tablename__ = "beacons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    major = Column(Integer, index=True)
+    minor = Column(Integer, index=True)
+    location = Column(String, index=True)
+    last_used = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
