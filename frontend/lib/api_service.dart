@@ -8,7 +8,7 @@ class ApiService {
   
 
   // En caso de usar un emulador de Android, usar esta dirección IP para localhost
-  //static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
 
   // En caso de usar ngrok, insertar la url ngrok y usar esto
@@ -16,7 +16,7 @@ class ApiService {
 
 
   //En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
-  static const String baseUrl = 'http://192.168.0.178:8000';
+  //static const String baseUrl = 'http://192.168.0.178:8000';
 
   Future<bool> register(String name, String email, String password) async {
 

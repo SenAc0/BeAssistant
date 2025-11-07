@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/pages/listaReunionesPage.dart';
+//import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/registerPage.dart';
-import 'package:myapp/api_service.dart';
-
+import 'package:myapp/scaffold.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,32 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final ApiService _apiService = ApiService();
-
   bool _isPasswordVisible = false;
-
-  void loginUser() async {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    bool success = await _apiService.login(email, password);
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inicio de sesión exitoso')),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ListaReunionesScreen(),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al iniciar sesión')),
-      );
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: const AssetImage('assets/images/beacon.png'),
+                  backgroundImage: const AssetImage(
+                    '../assets/images/beacon.png',
+                  ),
                 ),
                 const SizedBox(height: 10),
 
@@ -153,8 +129,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    // actualizar esto para que use el backend
-                    onPressed: loginUser,
+                    onPressed: () {
+                      // Validacion rápida al poner "a" en ambas
+                      if (_emailController.text == 'a' &&
+                          _passwordController.text == 'a') {
+                        Navigator.pushNamed(context, '/main');
+                        // pantalla a cambiar (inicio o verificación)
+                      }
+                      // Validacion normal
+                      if (_formKey.currentState!.validate()) {
+                        // Aquí lógica de autenticación
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const MainScaffold(), // pantalla a cambiar
+                          ),
+                        );
+                      }
+                    },
                     child: const Text(
                       'Iniciar sesión',
                       style: TextStyle(fontSize: 16),
