@@ -70,11 +70,11 @@ class BeaconBase(BaseModel):
     location: str
 
 class BeaconCreate(BeaconBase):
-    pass
+    id: str
 
 class Beacon(BeaconBase):
-    id: int
-    last_used: datetime   # 🕒 mismo formato que en Attendance.marked_at
+    id: str
+    last_used: datetime
 
     class Config:
         from_attributes = True

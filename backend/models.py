@@ -65,7 +65,7 @@ class Attendance(Base):
 class Beacon(Base):
     __tablename__ = "beacons"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     major = Column(Integer, index=True)
     minor = Column(Integer, index=True)
     location = Column(String, index=True)

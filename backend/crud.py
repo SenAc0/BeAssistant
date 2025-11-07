@@ -167,6 +167,7 @@ def list_attendance_for_user(db: Session, user_id: int):
 # ================= Beacon =================
 def create_beacon(db: Session, beacon: BeaconCreate):
     db_beacon = Beacon(
+        id=beacon.id,
         major=beacon.major,
         minor=beacon.minor,
         location=beacon.location
@@ -179,31 +180,30 @@ def create_beacon(db: Session, beacon: BeaconCreate):
 def get_beacons(db: Session):
     return db.query(Beacon).all()
 
-def get_beacon(db: Session, beacon_id: int):
+def get_beacon(db: Session, beacon_id: str):
     return db.query(Beacon).filter(Beacon.id == beacon_id).first()
 
-def delete_beacon(db: Session, beacon_id: int):
+def delete_beacon(db: Session, beacon_id: str):
     beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
     if beacon:
         db.delete(beacon)
         db.commit()
     return beacon
 
-def update_beacon(db: Session, beacon_id: int, beacon_data: BeaconCreate):
+def update_beacon(db: Session, beacon_id: str, beacon_data: BeaconCreate):
     beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
     if not beacon:
         return None
     beacon.major = beacon_data.major
     beacon.minor = beacon_data.minor
     beacon.location = beacon_data.location
-    # fecha de último uso
     beacon.last_used = datetime.now(timezone.utc)
+
     db.commit()
     db.refresh(beacon)
     return beacon
 
-def update_beacon_last_used(db: Session, beacon_id: int):
-    # Actualiza fecha de último uso del beacon sin modificar otros datos
+def update_beacon_last_used(db: Session, beacon_id: str):
     beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
     if beacon:
         beacon.last_used = datetime.now(timezone.utc)

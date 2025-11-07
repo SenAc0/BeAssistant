@@ -110,21 +110,21 @@ def list_beacons(db: Session = Depends(get_db)):
     return crud.get_beacons(db)
 
 @app.get("/beacons/{beacon_id}", response_model=schemas.Beacon)
-def get_beacon(beacon_id: int, db: Session = Depends(get_db)):
+def get_beacon(beacon_id: str, db: Session = Depends(get_db)):
     beacon = crud.get_beacon(db, beacon_id)
     if not beacon:
         raise HTTPException(status_code=404, detail="Beacon not found")
     return beacon
 
 @app.put("/beacons/{beacon_id}", response_model=schemas.Beacon)
-def update_beacon(beacon_id: int, beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
+def update_beacon(beacon_id: str, beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
     updated = crud.update_beacon(db, beacon_id, beacon)
     if not updated:
         raise HTTPException(status_code=404, detail="Beacon not found")
     return updated
 
 @app.delete("/beacons/{beacon_id}")
-def delete_beacon(beacon_id: int, db: Session = Depends(get_db)):
+def delete_beacon(beacon_id: str, db: Session = Depends(get_db)):
     deleted = crud.delete_beacon(db, beacon_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Beacon not found")
