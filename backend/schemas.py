@@ -14,9 +14,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    class Config:
-        #orm_mode = True
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # ========= Meetings =========
@@ -24,22 +22,26 @@ class MeetingBase(BaseModel):
     title: str
     description: Optional[str] = None
     start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    beacon_uuid: Optional[str] = None
-    beacon_major: Optional[int] = None
-    beacon_minor: Optional[int] = None
+    # end_time is computed server-side for create; included in Meeting response only
+    topics: Optional[str] = None
+    repeat_weekly: Optional[bool] = False
+    note: Optional[str] = None
+    beacon_id: Optional[str] = None
 
 
 class MeetingCreate(MeetingBase):
     title: str
+    # duration in minutes to compute end_time
+    duration_minutes: int
 
 
 class Meeting(MeetingBase):
     id: int
     created_at: datetime
+    end_time: Optional[datetime] = None
+    coordinator_id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # ========= Attendance =========
@@ -58,9 +60,8 @@ class Attendance(BaseModel):
     meeting_id: int
     status: str
     marked_at: datetime
-
-    class Config:
-        from_attributes = True
+    
+    model_config = {"from_attributes": True}
 
 
 # ========= Beacon =========
@@ -75,6 +76,5 @@ class BeaconCreate(BeaconBase):
 class Beacon(BeaconBase):
     id: str
     last_used: datetime
-
-    class Config:
-        from_attributes = True
+    
+    model_config = {"from_attributes": True}

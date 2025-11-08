@@ -5,6 +5,7 @@ from sqlalchemy import (
     String,
     ForeignKey,
     DateTime,
+    Boolean,
     func,
     UniqueConstraint,
 )
@@ -32,15 +33,23 @@ class Meeting(Base):
     start_time = Column(DateTime(timezone=True), nullable=True)
     end_time = Column(DateTime(timezone=True), nullable=True)
 
-    # Datos del beacon asociado (opcional, para detección en la app móvil)
-    beacon_uuid = Column(String, nullable=True)
-    beacon_major = Column(Integer, nullable=True)
-    beacon_minor = Column(Integer, nullable=True)
+    # Nuevos campos solicitados
+    topics = Column(String, nullable=True)
+    repeat_weekly = Column(Boolean, nullable=False, default=False)
+    note = Column(String, nullable=True)
+
+    # Coordinador (quien creó la reunión)
+    coordinator_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
+
+    # Beacon asociado por id (ya no uuid/major/minor en la reunión)
+    beacon_id = Column(String, ForeignKey("beacons.id", ondelete="SET NULL"), index=True, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships
     attendances = relationship("Attendance", back_populates="meeting", cascade="all, delete-orphan")
+    coordinator = relationship("User", back_populates="coordinated_meetings", foreign_keys=[coordinator_id])
+    beacon = relationship("Beacon", back_populates="meetings", foreign_keys=[beacon_id])
 
 
 class Attendance(Base):
@@ -70,3 +79,10 @@ class Beacon(Base):
     minor = Column(Integer, index=True)
     location = Column(String, index=True)
     last_used = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    meetings = relationship("Meeting", back_populates="beacon")
+
+
+# Add reverse relationship for meetings coordinated by a user
+User.coordinated_meetings = relationship("Meeting", back_populates="coordinator", foreign_keys=[Meeting.coordinator_id])

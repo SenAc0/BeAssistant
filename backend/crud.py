@@ -3,7 +3,7 @@ from schemas import UserCreate, MeetingCreate, BeaconCreate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi import HTTPException
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -61,15 +61,26 @@ def update_user(db: Session, user_id: int, new_email: str = None, new_password: 
 
 
 # ================= Meetings =================
-def create_meeting(db: Session, meeting: MeetingCreate) -> Meeting:
+def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | None = None) -> Meeting:
+    # Compute end_time from start_time + duration_minutes
+    end_time = None
+    if meeting.start_time is not None and meeting.duration_minutes is not None:
+        start = meeting.start_time
+        # Normalize to timezone-aware UTC if naive
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        end_time = start + timedelta(minutes=meeting.duration_minutes)
+
     db_meeting = Meeting(
         title=meeting.title,
         description=meeting.description,
         start_time=meeting.start_time,
-        end_time=meeting.end_time,
-        beacon_uuid=meeting.beacon_uuid,
-        beacon_major=meeting.beacon_major,
-        beacon_minor=meeting.beacon_minor,
+        end_time=end_time,
+        topics=meeting.topics,
+        repeat_weekly=bool(meeting.repeat_weekly) if meeting.repeat_weekly is not None else False,
+        note=meeting.note,
+        coordinator_id=coordinator_id,
+        beacon_id=meeting.beacon_id,
     )
     db.add(db_meeting)
     db.commit()
@@ -84,39 +95,6 @@ def list_meetings(db: Session):
 def get_meeting(db: Session, meeting_id: int):
     return db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
-"""
-#Resolve a meeting by beacon identifiers.
-#    Preference order:
-#    1) Active meeting (now between start_time and end_time)
-#    2) Latest meeting matching the beacon (by start_time desc, nulls last)
-def resolve_meeting_by_beacon(db: Session, uuid: str, major: int, minor: int):
-    now = datetime.now(timezone.utc)
-
-    base_q = (
-        db.query(Meeting)
-        .filter(
-            Meeting.beacon_uuid == uuid,
-            Meeting.beacon_major == major,
-            Meeting.beacon_minor == minor,
-        )
-    )
-
-    active = (
-        base_q.filter(
-            Meeting.start_time != None,
-            Meeting.end_time != None,
-            Meeting.start_time <= now,
-            Meeting.end_time >= now,
-        )
-        .order_by(Meeting.start_time.desc())
-        .first()
-    )
-    if active:
-        return active
-
-    return base_q.order_by(Meeting.start_time.desc().nullslast()).first()
-
-"""
 
 # ================= Attendance =================
 def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "present") -> Attendance:
