@@ -200,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const Placeholder(), // pantalla a cambiar (inicio o verificación)
+                                const LoginScreen(), // pantalla a cambiar (inicio o verificación)
                           ),
                         );
                       }
