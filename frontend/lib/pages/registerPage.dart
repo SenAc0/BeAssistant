@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../api_service.dart';
+
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+ 
+
 
   @override
   Widget build(BuildContext context) {
@@ -193,13 +200,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // Aquí iría la lógica de registro
-                        Navigator.pushReplacementNamed(context, '/main');
-                        
+                        final success = await ApiService().register(
+                          _nameController.text,
+                          _emailController.text,
+                          _passwordController.text,
+                        );
+
+                        if (success) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error al registrar")),
+                          );
+                        }
                       }
                     },
+
                     child: const Text(
                       'Crear cuenta',
                       style: TextStyle(fontSize: 16),

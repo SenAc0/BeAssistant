@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/registerPage.dart';
 import 'package:myapp/scaffold.dart';
-
+import '../api_service.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -129,24 +129,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      // Validacion rápida al poner "a" en ambas
-                      if (_emailController.text == 'a' &&
-                          _passwordController.text == 'a') {
-                        Navigator.pushNamed(context, '/main');
-                        // pantalla a cambiar (inicio o verificación)
-                      }
-                      // Validacion normal
+                   onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // Aquí lógica de autenticación
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const MainScaffold(), // pantalla a cambiar
-                          ),
+                        final success = await ApiService().login(
+                          _emailController.text.trim(),
+                          _passwordController.text.trim(),
                         );
+
+                        if (success) {
+                          //  Ir a la pantalla principal después de login
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MainScaffold(),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Email o contraseña incorrectos"),
+                            ),
+                          );
+                        }
                       }
                     },
                     child: const Text(
