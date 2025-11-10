@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/pages/listaReunionesPage.dart';
-//import 'package:myapp/pages/crearReunion2.dart';
-import 'package:myapp/utils/homeNavigation.dart';
 
 class CrearReunion3 extends StatelessWidget {
   const CrearReunion3({super.key});
@@ -10,8 +7,8 @@ class CrearReunion3 extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Crear Reunion'),
-        automaticallyImplyLeading: true,
+        title: const Text('Asistentes'),
+        automaticallyImplyLeading: false,
         centerTitle: true,
         backgroundColor: Colors.grey[300],
         elevation: 0,
@@ -68,8 +65,10 @@ class BotonesReunion3 extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () => volverAlInicio(context),
-            child: const Text('Crear Reunion', style: TextStyle(fontSize: 16)),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Confirmar', style: TextStyle(fontSize: 16)),
           ),
         ),
         const SizedBox(height: 20),
@@ -86,7 +85,7 @@ class BotonesReunion3 extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              volverAlInicio(context);
+              Navigator.pop(context);
             },
             child: const Text('Cancelar', style: TextStyle(fontSize: 16)),
           ),

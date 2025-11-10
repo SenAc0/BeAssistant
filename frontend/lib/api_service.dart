@@ -66,4 +66,61 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
   }
+
+  /// Obtiene la lista de reuniones del backend.
+  /// Retorna la lista decodificada (List) en caso de éxito, o `null` en caso de error.
+  Future<List<dynamic>?> getMeetings() async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return null;
+    }
+
+    final url = Uri.parse('$baseUrl/meetings');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Reuniones obtenidas: $data");
+      if (data is List) return data;
+      // sometimes backend can return an object with items under a key
+      return data as List<dynamic>?;
+    } else {
+      print("Error al obtener reuniones: ${response.body}");
+      return null;
+    }
+  }
+  /// Obtiene las reuniones del usuario autenticado. Retorna `List` o `null`.
+  Future<List<dynamic>?> getMyMeetings() async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return null;
+    }
+
+    final url = Uri.parse('$baseUrl/meetings/my');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Mis reuniones obtenidas: $data");
+      if (data is List) return data;
+      return data as List<dynamic>?;
+    } else {
+      print("Error al obtener mis reuniones: ${response.body}");
+      return null;
+    }
+  }
 }

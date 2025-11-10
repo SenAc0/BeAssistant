@@ -95,6 +95,9 @@ def list_meetings(db: Session):
 def get_meeting(db: Session, meeting_id: int):
     return db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
+def list_meetings_for_user(db: Session, user_id: int):
+    return db.query(Meeting).filter(Meeting.coordinator_id == user_id).order_by(Meeting.start_time.desc().nullslast()).all()
+
 
 # ================= Attendance =================
 def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "present") -> Attendance:

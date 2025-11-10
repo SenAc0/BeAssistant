@@ -1,9 +1,67 @@
 import 'package:flutter/material.dart';
 //import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/pages/paginaReunion.dart';
+import 'package:myapp/api_service.dart';
 
-class ListaReunionesScreen extends StatelessWidget {
+class ListaReunionesScreen extends StatefulWidget {
   const ListaReunionesScreen({super.key});
+
+  @override
+  State<ListaReunionesScreen> createState() => _ListaReunionesScreenState();
+}
+
+class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
+  final ApiService apiService = ApiService();
+  bool _loading = false;
+  String? _error;
+  List<dynamic> _meetings = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMeetings();
+  }
+
+  Future<void> _loadMeetings() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final data = await apiService.getMeetings();
+      if (data == null) {
+        setState(() {
+          _error = 'No se pudieron obtener las reuniones.';
+          _meetings = [];
+        });
+      } else {
+        setState(() {
+          _meetings = data;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _meetings = [];
+      });
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  String _formatDate(String? iso) {
+    if (iso == null) return 'Fecha no disponible';
+    try {
+      final dt = DateTime.tryParse(iso);
+      if (dt == null) return iso;
+      return '${dt.day}/${dt.month}/${dt.year} - ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+    } catch (_) {
+      return iso;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,62 +77,63 @@ class ListaReunionesScreen extends StatelessWidget {
 
       // --- CONTENIDO PRINCIPAL ---
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-
-
-                // --- BUSCADOR ---
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Buscar reuniones...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.grey[300],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+        child: RefreshIndicator(
+          onRefresh: _loadMeetings,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  // --- BUSCADOR ---
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Buscar reuniones...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[300],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
+                    onChanged: (value) {
+                      // Aquí podrías implementar búsqueda local
+                    },
                   ),
-                  onChanged: (value) {
-                    // Aquí podrías implementar búsqueda
-                  },
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                // --- BOTONES DE FILTRO ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: const [
-                    FilterButton(text: 'Todas'),
-                    FilterButton(text: 'Próximas'),
-                    FilterButton(text: 'En curso'),
-                  ],
-                ),
-                const SizedBox(height: 15),
+                  // --- BOTONES DE FILTRO ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: const [
+                      FilterButton(text: 'Todas'),
+                      FilterButton(text: 'Próximas'),
+                      FilterButton(text: 'En curso'),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
 
-                // --- LISTA DE REUNIONES ---
-                ListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    ReunionCard(
-                      titulo: 'Reunión de Proyecto',
-                      fecha: '28 de Noviembre, 2025 - 10:00 AM',
-                    ),
-                    ReunionCard(
-                      titulo: 'Revisión de diseño',
-                      fecha: '14 de Octubre, 2025 - 10:00 AM',
-                    ),
-                    ReunionCard(
-                      titulo: 'Reunión de planificación',
-                      fecha: '04 de Septiembre, 2025 - 10:00 AM',
-                    ),
-                  ],
-                ),
-              ],
+                  if (_loading) const CircularProgressIndicator(),
+                  if (_error != null) Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                  ),
+
+                  // --- LISTA DE REUNIONES ---
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _meetings.length,
+                    itemBuilder: (context, index) {
+                      final m = _meetings[index];
+                      final title = m['title'] ?? 'Reunión sin título';
+                      final start = _formatDate(m['start_time']);
+                      return ReunionCard(titulo: title, fecha: start);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -38,6 +38,7 @@ services:
 # Volúmenes persistentes
 volumes:
   postgres_data:
+    name: beacon_postgres_data
 
 # Red para comunicación entre contenedores
 networks:

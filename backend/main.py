@@ -82,6 +82,9 @@ def create_meeting(meeting: schemas.MeetingCreate, db: Session = Depends(get_db)
 def list_meetings(db: Session = Depends(get_db)):
     return crud.list_meetings(db)
 
+@app.get("/meetings/my", response_model=List[schemas.Meeting])
+def list_meetings_for_user(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    return crud.list_meetings_for_user(db, user_id=current_user.id)
 
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
