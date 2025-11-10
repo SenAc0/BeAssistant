@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/pages/crearReunion3.dart';
 
 class PaginaReunion extends StatelessWidget {
   const PaginaReunion({super.key});
@@ -13,33 +14,49 @@ class PaginaReunion extends StatelessWidget {
         backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 10),
-            SesionCard(
-              tituloSesion: "Revisión del Proyecto",
-              fecha: "02/11/2025",
-              hora: "10:00 AM",
-              coordinador: "Juan Pérez",
-              sala: "Sala 3",
-            ),
-            const SizedBox(height: 10),
-            TopicoCard(
-              titulo: "UI del sistema",
-              descripcion:
-                  " En la sesión del viernes 17 de Octubre, abordaremos como construir y estructurar la UI",
-            ),
-            const SizedBox(height: 10),
-            NotaCard(descripcionNota: "Recuerden llevar sus computadores"),
-            const SizedBox(height: 10),
-            AsistenciaCard(
-              asistencia: "Presente",
-              //asistencia: "Presente",
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CrearReunion3(),
+                    ),
+                  );
+                },
+                child: const Text('Asistentes'),
+              ),
+              const SizedBox(height: 10),
+              const SesionCard(
+                tituloSesion: "Revisión del Proyecto",
+                fecha: "02/11/2025",
+                hora: "10:00 AM",
+                coordinador: "Juan Pérez",
+                sala: "Sala 3",
+              ),
+              const SizedBox(height: 10),
+              const TopicoCard(
+                titulo: "UI del sistema",
+                descripcion:
+                    " En la sesión del viernes 17 de Octubre, abordaremos como construir y estructurar la UI",
+              ),
+              const SizedBox(height: 10),
+              const NotaCard(
+                descripcionNota: "Recuerden llevar sus computadores",
+              ),
+              const SizedBox(height: 10),
+              const AsistenciaCard(
+                asistencia: "Presente",
+                //asistencia: "Presente",
+              ),
+            ],
+          ),
         ),
       ),
     );
