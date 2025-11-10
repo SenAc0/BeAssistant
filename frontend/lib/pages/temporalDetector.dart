@@ -6,13 +6,14 @@ import 'package:permission_handler/permission_handler.dart';
 class BeaconData {
   final String name;
   final String id;
-  final int rssi;
+  int rssi;
   final String? uuid; // iBeacon UUID when available
   final int? major; // iBeacon major
   final int? minor; // iBeacon minor
   final int? txPower; // iBeacon measured power
   final String? manufacturerHex; // raw manufacturer data as hex when available
   DateTime lastSeen;
+  final List<int> _rssiHistory = [];
 
   BeaconData({
     required this.name,
@@ -26,14 +27,21 @@ class BeaconData {
     DateTime? lastSeen,
   }) : lastSeen = lastSeen ?? DateTime.now();
 
+  void addRssi(int r) {
+    _rssiHistory.add(r);
+    if (_rssiHistory.length > 8) _rssiHistory.removeAt(0);
+  }
+
+  // raw RSSI is stored in `rssi` and updated on each scan result
+
   String pretty() {
     if (uuid != null) {
-      return 'iBeacon UUID: $uuid\nMajor: ${major ?? '-'} Minor: ${minor ?? '-'}\nRSSI: $rssi\nLast seen: ${lastSeen.toLocal()}';
+      return 'iBeacon UUID: $uuid\nMajor: ${major ?? '-'} Minor: ${minor ?? '-'}\nRSSI: ${rssi} dBm\nLast seen: ${lastSeen.toLocal()}';
     }
     if (manufacturerHex != null) {
-      return 'Manufacturer: $manufacturerHex\nRSSI: $rssi\nLast seen: ${lastSeen.toLocal()}';
+      return 'Manufacturer: $manufacturerHex\nRSSI: ${rssi} dBm\nLast seen: ${lastSeen.toLocal()}';
     }
-    return 'Device: $name\nID: $id\nRSSI: $rssi\nLast seen: ${lastSeen.toLocal()}';
+    return 'Device: $name\nID: $id\nRSSI: ${rssi} dBm\nLast seen: ${lastSeen.toLocal()}';
   }
 }
 
@@ -237,6 +245,9 @@ class _TemporalDetectorState extends State<TemporalDetector> {
   List<BeaconData> _beacons = [];
   final TextEditingController _uuidController = TextEditingController();
   bool _isScanningLocal = false;
+  Timer? _rssiTimer;
+  bool _isAttempting = false;
+  String _attemptStatus = '';
 
   @override
   void initState() {
@@ -252,21 +263,30 @@ class _TemporalDetectorState extends State<TemporalDetector> {
     });
 
     await _beaconService.startScanning(onBeaconFound: (beacon) {
+      // update list without losing rssi history
+      final now = DateTime.now();
+      final identifier = beacon.uuid ?? beacon.id;
+      final existingIndex = _beacons.indexWhere((b) => (b.uuid ?? b.id) == identifier);
+      if (existingIndex >= 0) {
+        final existing = _beacons[existingIndex];
+        existing.addRssi(beacon.rssi);
+        existing.rssi = beacon.rssi;
+        existing.lastSeen = now;
+      } else {
+        beacon.addRssi(beacon.rssi);
+        beacon.lastSeen = now;
+        _beacons.add(beacon);
+      }
       setState(() {
-        // update lastSeen time
-        beacon.lastSeen = DateTime.now();
-
-        // identify by UUID when available, otherwise by id
-        final identifier = beacon.uuid ?? beacon.id;
-        final existingIndex = _beacons.indexWhere((b) => (b.uuid ?? b.id) == identifier);
-        if (existingIndex >= 0) {
-          _beacons[existingIndex] = beacon;
-        } else {
-          _beacons.add(beacon);
-        }
         _status = "Beacons detectados: ${_beacons.length}";
       });
     }, filterUuid: target.isEmpty ? null : target);
+
+    // start periodic UI refresh to compute/show RSSI every second
+    _rssiTimer?.cancel();
+    _rssiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _stopScan() async {
@@ -275,12 +295,15 @@ class _TemporalDetectorState extends State<TemporalDetector> {
       _isScanningLocal = false;
       _status = "Escaneo detenido";
     });
+    _rssiTimer?.cancel();
+    _rssiTimer = null;
   }
 
   @override
   void dispose() {
     _beaconService.stopScanning();
     _uuidController.dispose();
+    _rssiTimer?.cancel();
     super.dispose();
   }
 
@@ -308,10 +331,28 @@ class _TemporalDetectorState extends State<TemporalDetector> {
                   onPressed: _isScanningLocal ? _stopScan : _startScan,
                   child: Text(_isScanningLocal ? 'Stop' : 'Start'),
                 ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _isAttempting
+                      ? null
+                      : () async {
+                          final uuidText = _uuidController.text.trim();
+                          if (uuidText.isEmpty) {
+                            setState(() => _attemptStatus = 'Introduce una UUID antes');
+                            return;
+                          }
+                          await _performTripleAttempt(uuidText);
+                        },
+                  child: const Text('Detectar x3'),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Text(_status),
+            if (_attemptStatus.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(_attemptStatus, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
             const SizedBox(height: 12),
             Expanded(
               child: _beacons.isEmpty
@@ -332,5 +373,74 @@ class _TemporalDetectorState extends State<TemporalDetector> {
         ),
       ),
     );
+  }
+
+  Future<void> _performTripleAttempt(String rawUuid) async {
+    final norm = rawUuid.replaceAll('-', '').toLowerCase();
+    final uuid32 = norm.length >= 32 ? norm.substring(0, 32) : norm;
+    setState(() {
+      _isAttempting = true;
+      _attemptStatus = 'Iniciando intentos...';
+    });
+
+    bool found = false;
+    BeaconData? foundBeacon;
+
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      if (!mounted) break;
+      setState(() => _attemptStatus = 'Intento $attempt de 3 — escaneando 3s...');
+
+      final completer = Completer<bool>();
+
+      void onFound(BeaconData b) {
+        final bnorm = b.uuid?.replaceAll('-', '').toLowerCase();
+        if (bnorm != null && bnorm == uuid32) {
+          if (!completer.isCompleted) completer.complete(true);
+          foundBeacon = b;
+        }
+      }
+
+      try {
+        await _beaconService.startScanning(onBeaconFound: onFound, filterUuid: uuid32);
+      } catch (e) {
+        setState(() => _attemptStatus = 'Error iniciando escaneo: $e');
+        break;
+      }
+
+      final detected = await Future.any([completer.future, Future.delayed(const Duration(seconds: 3), () => false)]);
+
+      try {
+        await _beaconService.stopScanning();
+      } catch (_) {}
+
+      if (detected == true) {
+        found = true;
+        setState(() => _attemptStatus = 'Beacon detectado en intento $attempt');
+        break;
+      } else {
+        setState(() => _attemptStatus = 'No detectado en intento $attempt');
+        // small pause between attempts
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+    }
+
+    if (found && foundBeacon != null) {
+      // update list and UI with the found beacon
+      final identifier = foundBeacon!.uuid ?? foundBeacon!.id;
+      final existingIndex = _beacons.indexWhere((b) => (b.uuid ?? b.id) == identifier);
+      if (existingIndex >= 0) {
+        _beacons[existingIndex] = foundBeacon!;
+      } else {
+        _beacons.add(foundBeacon!);
+      }
+      setState(() => _status = 'Beacon detectado: ${foundBeacon!.name} (${foundBeacon!.rssi} dBm)');
+    } else if (!found) {
+      setState(() => _status = 'Beacon no detectado después de 3 intentos');
+    }
+
+    setState(() {
+      _isAttempting = false;
+      // keep attempt status visible for a short while
+    });
   }
 }

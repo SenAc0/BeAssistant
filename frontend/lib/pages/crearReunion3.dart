@@ -68,14 +68,7 @@ class BotonesReunion3 extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaReunionesScreen(),
-                ),
-              );
-            },
+            onPressed: () => volverAlInicio(context),
             child: const Text('Crear Reunion', style: TextStyle(fontSize: 16)),
           ),
         ),

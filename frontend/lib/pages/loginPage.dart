@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   radius: 60,
                   backgroundColor: Colors.grey.shade200,
                   backgroundImage: const AssetImage(
-                    '../assets/images/beacon.png',
+                    'assets/images/beacon.png',
                   ),
                 ),
                 const SizedBox(height: 10),

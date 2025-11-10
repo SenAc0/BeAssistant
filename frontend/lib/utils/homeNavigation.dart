@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 void volverAlInicio(BuildContext context) {
-  //Navigator.popUntil(context, (route) => route.isFirst);
-  Navigator.popUntil(context, ModalRoute.withName('/main'));
+  // Navigate to the app main screen and clear the back stack to avoid landing on a blank page.
+  Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
 }
+
