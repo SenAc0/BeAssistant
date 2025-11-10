@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 //import 'package:myapp/pages/crearReunion1.dart';
-import 'package:myapp/pages/crearReunion3.dart';
 import 'package:myapp/utils/homeNavigation.dart';
 
 class CrearReunion2 extends StatelessWidget {
@@ -76,7 +75,7 @@ class CrearReunion2 extends StatelessWidget {
               ),
 
               const SizedBox(height: 6),
-              
+
               // --- EJEMPLO LISTA DE REUNIONES ---
               ListView(
                 shrinkWrap: true,
@@ -99,8 +98,7 @@ class CrearReunion2 extends StatelessWidget {
             ],
           ),
         ),
-      )
-      
+      ),
     );
   }
 }
@@ -125,12 +123,9 @@ class BotonesReunion2 extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CrearReunion3()),
-              );
+              volverAlInicio(context);
             },
-            child: const Text('Siguiente', style: TextStyle(fontSize: 16)),
+            child: const Text('Confirmar', style: TextStyle(fontSize: 16)),
           ),
         ),
         const SizedBox(height: 20),
@@ -303,9 +298,12 @@ class _HoraState extends State<Hora> {
         children: [
           const Icon(Icons.access_time, color: Colors.black, size: 20),
           const SizedBox(width: 8),
-          Text(
-            horaTexto,
-            style: const TextStyle(fontSize: 14, color: Colors.black),
+          Flexible(
+            child: Text(
+              horaTexto,
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -339,7 +337,11 @@ class _FilterButtonState extends State<FilterButton> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text(widget.text, textAlign: TextAlign.center),
+      child: Text(
+        widget.text,
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
