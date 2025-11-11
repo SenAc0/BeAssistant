@@ -29,7 +29,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
     });
 
     try {
-      final data = await apiService.getMeetings();
+      final data = await apiService.getMyMeetings();
       if (data == null) {
         setState(() {
           _error = 'No se pudieron obtener las reuniones.';
@@ -57,7 +57,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
     try {
       final dt = DateTime.tryParse(iso);
       if (dt == null) return iso;
-      return '${dt.day}/${dt.month}/${dt.year} - ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+      return '${dt.day}/${dt.month}/${dt.year} - ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
       return iso;
     }
@@ -115,10 +115,14 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                   const SizedBox(height: 15),
 
                   if (_loading) const CircularProgressIndicator(),
-                  if (_error != null) Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
-                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
 
                   // --- LISTA DE REUNIONES ---
                   ListView.builder(

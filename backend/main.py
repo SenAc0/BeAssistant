@@ -27,10 +27,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 app = FastAPI()
 
 # Al iniciar, eliminar y recrear todas las tablas (destructivo, solo para desarrollo)
-@app.on_event("startup")
-def reset_database():
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
+#@app.on_event("startup")
+#def reset_database():
+#    models.Base.metadata.drop_all(bind=engine)
+#    models.Base.metadata.create_all(bind=engine)
 
 # Constantes
 BEACON_NOT_FOUND = "Beacon not found"
@@ -41,17 +41,12 @@ def read_root():
     return {"message": "FastAPI"}
 
 
-
-
-
-
 @app.post("/register", response_model=schemas.User)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db, user)
-
 
 
 
@@ -69,6 +64,10 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     access_token = auth.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
+#para perfil
+@app.get("/me", response_model=schemas.User)
+def get_me(current_user=Depends(auth.get_current_user)):
+    return current_user
 
 
 # ================= Meetings =================
@@ -77,11 +76,11 @@ def create_meeting(meeting: schemas.MeetingCreate, db: Session = Depends(get_db)
     # Nota: en un escenario real, validar rol/admin aquí
     return crud.create_meeting(db, meeting, coordinator_id=current_user.id)
 
-
 @app.get("/meetings", response_model=List[schemas.Meeting])
 def list_meetings(db: Session = Depends(get_db)):
     return crud.list_meetings(db)
 
+#endpoint para obtener reuniones del usuario actual
 @app.get("/meetings/my", response_model=List[schemas.Meeting])
 def list_meetings_for_user(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
     return crud.list_meetings_for_user(db, user_id=current_user.id)

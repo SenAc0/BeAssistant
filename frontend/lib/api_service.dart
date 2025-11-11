@@ -16,7 +16,7 @@ class ApiService {
 
 
   //En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
-  static const String baseUrl = 'http://192.168.0.178:8000';
+  static const String baseUrl = 'http://192.168.1.13:8000';
 
   Future<bool> register(String name, String email, String password) async {
 
@@ -123,4 +123,46 @@ class ApiService {
       return null;
     }
   }
+  //perfil
+  Future<Map<String, dynamic>?> getProfile() async {
+    final token = await getToken();
+    if (token == null) return null;
+
+    final url = Uri.parse('$baseUrl/me');
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error obteniendo perfil: ${response.body}");
+      return null;
+    }
+  }
+  Future<bool> createMeeting(Map<String, dynamic> meetingData) async {
+    final token = await getToken();
+    if (token == null) return false;
+
+    final url = Uri.parse('$baseUrl/meetings');
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(meetingData),
+    );
+
+    print("Respuesta crear meeting: ${response.body}");
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
 }
