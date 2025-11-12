@@ -88,7 +88,16 @@ def list_meetings_for_user(db: Session = Depends(get_db), current_user=Depends(a
 #endpoint para obtener una reunion por id del usuario actual
 @app.get("/meeting/{meeting_id}", response_model=schemas.MeetingDetail, status_code=status.HTTP_200_OK)
 def get_meeting_for_user(meeting_id: int, db: Session = Depends(get_db)):
-    return crud.get_meeting(db, meeting_id)
+    meeting = crud.get_meeting(db, meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    response = schemas.MeetingDetail.model_validate(meeting)
+    # Asignar location del beacon si existe
+    if meeting.beacon:
+        response.location = meeting.beacon.location
+    
+    return response
 
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
