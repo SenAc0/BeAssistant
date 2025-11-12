@@ -1,65 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/pages/crearReunion3.dart';
+import 'package:myapp/api_service.dart';
+//import 'package:myapp/pages/crearReunion3.dart';
 
-class PaginaReunion extends StatelessWidget {
-  const PaginaReunion({super.key});
+class PaginaReunion extends StatefulWidget {
+  final int meetingID;
+
+  const PaginaReunion({super.key, required this.meetingID});
+
+  @override
+  State<PaginaReunion> createState() => _PaginaReunionState();
+}
+
+class _PaginaReunionState extends State<PaginaReunion>{
+  Map<String, dynamic>? _reunion;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarReunion();
+  }
+
+  Future<void> _cargarReunion() async {
+    try {
+      final data = await ApiService().getMeeting(widget.meetingID);
+      setState(() {
+        _reunion = data;
+        _loading = false;
+        }
+      );
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Cargando...'),
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null){
+      return Scaffold(
+        appBar: AppBar(title: Text('Error')),
+        body: Center(child: Text('Error: $_error')),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Reunion'),
-        centerTitle: true,
+        title: Text(_reunion?['title'] ?? 'Reunión'),
         backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CrearReunion3(),
-                    ),
-                  );
-                },
-                child: const Text('Asistentes'),
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            SesionCard(
+              tituloSesion: _reunion?['title'] ?? 'Sin título',
+              fecha: _formatDate(_reunion?['start_time']),
+              hora: _formatHora(_reunion?['start_time']),
+              coordinador: _reunion?['coordinator']?['name'] ?? 'Sin coordinador',
+              sala: _reunion?['location'] ?? 'Sin sala',
+            ),
+            const SizedBox(height: 12),
+            
+            if (_reunion?['topics'] != null && _reunion!['topics'].isNotEmpty)
+              TopicoCard(
+                titulo: _reunion?['topics'] ?? 'Sin título',
+                descripcion: _reunion?['description'] ?? 'Sin tópicos',
               ),
-              const SizedBox(height: 10),
-              const SesionCard(
-                tituloSesion: "Revisión del Proyecto",
-                fecha: "02/11/2025",
-                hora: "10:00 AM",
-                coordinador: "Juan Pérez",
-                sala: "Sala 3",
+            
+            const SizedBox(height: 12),
+        
+            if (_reunion?['note'] != null && _reunion!['note'].isNotEmpty)
+              NotaCard(
+                descripcionNota: _reunion?['note'] ?? 'Sin notas',
               ),
-              const SizedBox(height: 10),
-              const TopicoCard(
-                titulo: "UI del sistema",
-                descripcion:
-                    " En la sesión del viernes 17 de Octubre, abordaremos como construir y estructurar la UI",
-              ),
-              const SizedBox(height: 10),
-              const NotaCard(
-                descripcionNota: "Recuerden llevar sus computadores",
-              ),
-              const SizedBox(height: 10),
-              const AsistenciaCard(
-                asistencia: "Presente",
-                //asistencia: "Presente",
-              ),
-            ],
-          ),
+            
+            const SizedBox(height: 12),
+          
+            AsistenciaCard(
+              asistencia: "Ausente", 
+            ),
+          ],
         ),
       ),
     );
+  }
+  String _formatDate(String? iso) {
+    if (iso == null) return 'Sin fecha';
+    try {
+      final dt = DateTime.tryParse(iso);
+      if (dt == null) return 'Sin fecha';
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return 'Sin fecha';
+    }
+  }
+
+  String _formatHora(String? iso) {
+    if (iso == null) return 'Sin hora';
+    try {
+      final dt = DateTime.tryParse(iso);
+      if (dt == null) return 'Sin hora';
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return 'Sin hora';
+    }
   }
 }
 
