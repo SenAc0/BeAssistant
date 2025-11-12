@@ -133,7 +133,9 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                       final m = _meetings[index];
                       final title = m['title'] ?? 'Reunión sin título';
                       final start = _formatDate(m['start_time']);
-                      return ReunionCard(titulo: title, fecha: start);
+                      final id = m['id'];
+
+                      return ReunionCard(titulo: title, fecha: start, meetingId: id,);
                     },
                   ),
                 ],
@@ -181,7 +183,9 @@ class FilterButton extends StatelessWidget {
 class ReunionCard extends StatelessWidget {
   final String titulo;
   final String fecha;
-  const ReunionCard({super.key, required this.titulo, required this.fecha});
+  final int meetingId;
+  
+  const ReunionCard({super.key, required this.titulo, required this.fecha, required this.meetingId});
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +201,7 @@ class ReunionCard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const PaginaReunion()),
+            MaterialPageRoute(builder: (context) => PaginaReunion(meetingID: meetingId)),
           );
         },
       ),

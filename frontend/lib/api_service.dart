@@ -15,8 +15,12 @@ class ApiService {
   //static const String baseUrl = 'https://7c599f4c595a.ngrok-free.app';
 
 
-  //En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
-  static const String baseUrl = 'http://192.168.1.13:8000';
+  // Para ejecutar en Linux/Desktop (mismo equipo que el backend Docker)
+  static const String baseUrl = 'http://localhost:8000';
+  
+  // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
+  // Nota: IP actual de esta máquina es 192.168.1.129
+  //static const String baseUrl = 'http://192.168.1.129:8000';
 
   Future<bool> register(String name, String email, String password) async {
 
@@ -120,6 +124,32 @@ class ApiService {
       return data as List<dynamic>?;
     } else {
       print("Error al obtener mis reuniones: ${response.body}");
+      return null;
+    }
+  }
+
+  /// Obtener solo una reunion por id de la reunion
+  Future<Map<String, dynamic>?> getMeeting(int meetingID) async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible");
+      return null;
+    } 
+    final url = Uri.parse('$baseUrl/meeting/$meetingID');
+    final response = await http.get(
+      url,
+      headers:{
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200 ) {
+      final data = jsonDecode(response.body);
+      print("Reunión obtenida: $data");
+      return data;
+
+    } else {
+      print("Error al obtener la reunión: ${response.body}");
       return null;
     }
   }
