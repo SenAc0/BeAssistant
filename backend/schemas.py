@@ -44,6 +44,18 @@ class Meeting(MeetingBase):
     model_config = {"from_attributes": True}
 
 
+# Schema con relaciones anidadas para detalles completos
+class MeetingDetail(MeetingBase):
+    id: int
+    created_at: datetime
+    end_time: Optional[datetime] = None
+    coordinator_id: Optional[int] = None
+    coordinator: Optional[User] = None
+    location: Optional[str] = None  # Del beacon
+
+    model_config = {"from_attributes": True}
+
+
 # ========= Attendance =========
 class AttendanceBase(BaseModel):
     meeting_id: int

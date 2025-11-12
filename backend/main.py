@@ -18,7 +18,7 @@ from fastapi import Query
 # models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
 
 
-# models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
+models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
 
 ##############################
 
@@ -84,6 +84,11 @@ def list_meetings(db: Session = Depends(get_db)):
 @app.get("/meetings/my", response_model=List[schemas.Meeting])
 def list_meetings_for_user(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
     return crud.list_meetings_for_user(db, user_id=current_user.id)
+
+#endpoint para obtener una reunion por id del usuario actual
+@app.get("/meeting/{meeting_id}", response_model=schemas.MeetingDetail, status_code=status.HTTP_200_OK)
+def get_meeting_for_user(meeting_id: int, db: Session = Depends(get_db)):
+    return crud.get_meeting(db, meeting_id)
 
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
