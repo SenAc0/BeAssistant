@@ -4,7 +4,6 @@ import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/loginPage.dart';
 import 'package:myapp/pages/profilePage.dart';
 import 'package:myapp/pages/crearReunion1.dart';
-import 'package:myapp/pages/paginaReunion.dart';
 import 'package:myapp/scaffold.dart';
 void main() {
   runApp(const MyApp());
@@ -35,8 +34,6 @@ class MyApp extends StatelessWidget {
         '/crearReunion1': (context) =>
             const CrearReunion1(), // creación de reunión
         '/perfil': (context) => const PerfilPage(), // perfil de usuario
-        '/paginaReunion': (context) =>
-            const PaginaReunion(), // detalles de una reunión
         '/listaReunion': (context) =>
             const ListaReunionesScreen(), // lista de reuniones
         '/configuracion': (context) =>
