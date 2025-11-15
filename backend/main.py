@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 import crud, models, schemas, auth
 from db import get_db, engine
 from sqlalchemy.orm import Session
@@ -25,6 +26,16 @@ models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos defin
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Crear la aplicación
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Para pruebas, luego restringe
+    allow_credentials=True,
+    allow_methods=["*"],  # ← IMPORTANTE para OPTIONS
+    allow_headers=["*"],
+)
+
 
 # Al iniciar, eliminar y recrear todas las tablas (destructivo, solo para desarrollo)
 #@app.on_event("startup")
