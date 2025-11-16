@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/configurationPage.dart';
+import 'package:myapp/pages/historial.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/noHecho.dart';
-import 'package:myapp/pages/temporalDetector.dart';
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 
@@ -19,7 +19,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   void initState() {
     super.initState();
     _pages = [
-      const TemporalDetector(),
+      const Historial(),
       const ListaReunionesScreen(),
       const NoHechoPage(title: "Reportes"),
       const ConfigurationPage(),
