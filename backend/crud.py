@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
+
+CHILE_TZ = ZoneInfo("America/Santiago")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -67,15 +70,20 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
     if meeting.start_time is not None and meeting.duration_minutes is not None:
         start = meeting.start_time
         # Normalize to timezone-aware UTC if naive
+        
         if start.tzinfo is None:
-            start = start.replace(tzinfo=timezone.utc)
-        end_time = start + timedelta(minutes=meeting.duration_minutes)
+            # interpret local time correctly
+            start = start.replace(tzinfo=CHILE_TZ)
+
+        # convert to UTC for saving
+        start_utc = start.astimezone(timezone.utc)
+        end_utc = start_utc + timedelta(minutes=meeting.duration_minutes)
 
     db_meeting = Meeting(
         title=meeting.title,
         description=meeting.description,
-        start_time=meeting.start_time,
-        end_time=end_time,
+        start_time=start_utc,
+        end_time=end_utc,
         topics=meeting.topics,
         repeat_weekly=bool(meeting.repeat_weekly) if meeting.repeat_weekly is not None else False,
         note=meeting.note,
@@ -114,11 +122,11 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "p
     # Ensure meeting times are timezone-aware for comparison
     start = meeting.start_time
     end = meeting.end_time
-    if start.tzinfo is None:
-        start = start.replace(tzinfo=timezone.utc)
-    if end.tzinfo is None:
-        end = end.replace(tzinfo=timezone.utc)
 
+
+    print("hora actual utc:", now_utc)
+    print("start utc:", start)
+    print("end utc:", end)
     if now_utc < start:
         raise HTTPException(status_code=400, detail="Meeting has not started yet")
     if now_utc > end:
@@ -131,6 +139,9 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "p
         .first()
     )
     if existing:
+        existing.status = status
+        db.commit()
+        db.refresh(existing)
         return existing
 
     att = Attendance(user_id=user_id, meeting_id=meeting_id, status=status)
