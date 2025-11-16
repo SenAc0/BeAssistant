@@ -157,7 +157,7 @@ class BeaconService {
             final targetMac = 'e6:a9:19:25:e6:ee'; // normalized lowercase
             final deviceId = scanResult.device.id.id.toLowerCase();
             final deviceName = scanResult.device.name;
-            if (deviceId == targetMac || deviceName.contains('Holy')) {
+            if (deviceId == targetMac) {
               print('--- DEBUG MATCH for device $deviceId / name: $deviceName ---');
               print('RSSI: ${scanResult.rssi}');
               final advFull = scanResult.advertisementData;
