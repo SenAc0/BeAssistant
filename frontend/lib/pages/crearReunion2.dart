@@ -211,8 +211,9 @@ class _CrearReunion2State extends State<CrearReunion2> {
 
   // -------------------- BOTONES ------------------------
   Widget _botones() {
-    return Column(
-      children: [
+    return Center(
+      child: Column(
+        children: [
         // Confirmar
         SizedBox(
           width: 200,
@@ -220,7 +221,9 @@ class _CrearReunion2State extends State<CrearReunion2> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),),
             ),
+            
             onPressed: () {
               if (fechaSeleccionada == null ||
                   horaSeleccionada == null ||
@@ -248,12 +251,17 @@ class _CrearReunion2State extends State<CrearReunion2> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),),
+
             ),
+            
             onPressed: () => volverAlInicio(context),
             child: const Text("Cancelar"),
           ),
         ),
-      ],
+        ],
+      ),
+      
     );
   }
 
