@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/loginPage.dart';
+import 'package:myapp/api_service.dart';
+import 'package:myapp/pages/loginPage.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -14,6 +16,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final ApiService apiService = ApiService();
+
+
+  void registerUser() async {
+    String name = _nameController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    bool success = await apiService.register(name, email, password);
+    if (success) {
+      // Registro exitoso, navegar a la pantalla de login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } else {
+      // Mostrar error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al registrar el usuario')),
+      );
+    }
+  }
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -193,18 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // Aquí iría la lógica de registro
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const LoginScreen(), // pantalla a cambiar (inicio o verificación)
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: registerUser,
                     child: const Text(
                       'Crear cuenta',
                       style: TextStyle(fontSize: 16),
