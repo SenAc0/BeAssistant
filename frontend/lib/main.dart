@@ -5,8 +5,12 @@ import 'package:myapp/pages/loginPage.dart';
 import 'package:myapp/pages/profilePage.dart';
 import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/scaffold.dart';
-//import 'package:myapp/pages/temporalDetector.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:flutter/widgets.dart';
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  tzdata.initializeTimeZones();
   runApp(const MyApp());
 }
 

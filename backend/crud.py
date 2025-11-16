@@ -64,18 +64,37 @@ def update_user(db: Session, user_id: int, new_email: str = None, new_password: 
 
 
 # ================= Meetings =================
+def _convert_meeting_to_chile(meeting: Meeting):
+    """Convert meeting datetime fields to America/Santiago for responses (non-persistent).
+    Assumes stored times are UTC (or naive treated as UTC).
+    """
+    if not meeting:
+        return meeting
+    for attr in ("start_time", "end_time", "created_at"):
+        dt = getattr(meeting, attr, None)
+        if dt is None:
+            continue
+        # treat naive as UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        try:
+            setattr(meeting, attr, dt.astimezone(CHILE_TZ))
+        except Exception:
+            # fallback: leave as-is
+            setattr(meeting, attr, dt)
+    return meeting
+
+
 def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | None = None) -> Meeting:
     # Compute end_time from start_time + duration_minutes
-    end_time = None
+    start_utc = None
+    end_utc = None
     if meeting.start_time is not None and meeting.duration_minutes is not None:
         start = meeting.start_time
-        # Normalize to timezone-aware UTC if naive
-        
+        # Normalize to timezone-aware Chile if naive
         if start.tzinfo is None:
-            # interpret local time correctly
             start = start.replace(tzinfo=CHILE_TZ)
-
-        # convert to UTC for saving
+        # convert to UTC for saving (tz-aware UTC)
         start_utc = start.astimezone(timezone.utc)
         end_utc = start_utc + timedelta(minutes=meeting.duration_minutes)
 
@@ -93,43 +112,58 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
     db.add(db_meeting)
     db.commit()
     db.refresh(db_meeting)
+    # convert for response
+    _convert_meeting_to_chile(db_meeting)
     return db_meeting
 
 
 def list_meetings(db: Session):
-    return db.query(Meeting).order_by(Meeting.start_time.desc().nullslast()).all()
+    meetings = db.query(Meeting).order_by(Meeting.start_time.desc().nullslast()).all()
+    for m in meetings:
+        _convert_meeting_to_chile(m)
+    return meetings
 
 
 def get_meeting(db: Session, meeting_id: int):
-    return db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if meeting:
+        print(meeting.start_time)
+        _convert_meeting_to_chile(meeting)
+        print(meeting.start_time)
+    return meeting
+
 
 def list_meetings_for_user(db: Session, user_id: int):
-    return db.query(Meeting).filter(Meeting.coordinator_id == user_id).order_by(Meeting.start_time.desc().nullslast()).all()
+    meetings = db.query(Meeting).filter(Meeting.coordinator_id == user_id).order_by(Meeting.start_time.desc().nullslast()).all()
+    for m in meetings:
+        print("antes", m.start_time)
+        _convert_meeting_to_chile(m)
+        print("despues", m.start_time)
+    return meetings
 
 
 # ================= Attendance =================
 def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "present") -> Attendance:
-    # Check meeting exists
-    meeting = get_meeting(db, meeting_id)
+    # Get raw meeting from DB (UTC) for time comparison
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # Validate time window: only allow marking between start_time and end_time
     if meeting.start_time is None or meeting.end_time is None:
         raise HTTPException(status_code=400, detail="Meeting time window not configured")
 
     now_utc = datetime.now(timezone.utc)
-    # Ensure meeting times are timezone-aware for comparison
-    start = meeting.start_time
-    end = meeting.end_time
+    start_utc = meeting.start_time
+    end_utc = meeting.end_time
+    # treat naive DB datetimes as UTC
+    if start_utc.tzinfo is None:
+        start_utc = start_utc.replace(tzinfo=timezone.utc)
+    if end_utc.tzinfo is None:
+        end_utc = end_utc.replace(tzinfo=timezone.utc)
 
-
-    print("hora actual utc:", now_utc)
-    print("start utc:", start)
-    print("end utc:", end)
-    if now_utc < start:
+    if now_utc < start_utc:
         raise HTTPException(status_code=400, detail="Meeting has not started yet")
-    if now_utc > end:
+    if now_utc > end_utc:
         raise HTTPException(status_code=400, detail="Meeting has already ended")
 
     # Find existing attendance

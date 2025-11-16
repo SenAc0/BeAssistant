@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/api_service.dart';
 import 'package:myapp/pages/beacon_service.dart';
-//import 'package:myapp/pages/crearReunion3.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class PaginaReunion extends StatefulWidget {
   final int meetingID;
@@ -149,7 +149,14 @@ class _PaginaReunionState extends State<PaginaReunion>{
     try {
       final dt = DateTime.tryParse(iso);
       if (dt == null) return 'Sin fecha';
-      return '${dt.day}/${dt.month}/${dt.year}';
+      try {
+        final loc = tz.getLocation('America/Santiago');
+        final tz.TZDateTime chileDt = tz.TZDateTime.from(dt, loc);
+        return '${chileDt.day}/${chileDt.month}/${chileDt.year}';
+      } catch (e) {
+        final local = dt.toLocal();
+        return '${local.day}/${local.month}/${local.year}';
+      }
     } catch (_) {
       return 'Sin fecha';
     }
@@ -160,7 +167,14 @@ class _PaginaReunionState extends State<PaginaReunion>{
     try {
       final dt = DateTime.tryParse(iso);
       if (dt == null) return 'Sin hora';
-      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      try {
+        final loc = tz.getLocation('America/Santiago');
+        final tz.TZDateTime chileDt = tz.TZDateTime.from(dt, loc);
+        return '${chileDt.hour.toString().padLeft(2, '0')}:${chileDt.minute.toString().padLeft(2, '0')}';
+      } catch (e) {
+        final local = dt.toLocal();
+        return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+      }
     } catch (_) {
       return 'Sin hora';
     }

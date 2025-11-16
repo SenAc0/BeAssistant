@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/pages/paginaReunion.dart';
 import 'package:myapp/api_service.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class ListaReunionesScreen extends StatefulWidget {
   const ListaReunionesScreen({super.key});
@@ -57,7 +58,18 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
     try {
       final dt = DateTime.tryParse(iso);
       if (dt == null) return iso;
-      return '${dt.day}/${dt.month}/${dt.year} - ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+      // Try to convert to America/Santiago using timezone package.
+      // Ensure you called timezone.initializeTimeZones() in main.dart at app startup.
+      try {
+        final loc = tz.getLocation('America/Santiago');
+        final tz.TZDateTime chileDt = tz.TZDateTime.from(dt, loc);
+        return '${chileDt.day}/${chileDt.month}/${chileDt.year} - ${chileDt.hour.toString().padLeft(2, '0')}:${chileDt.minute.toString().padLeft(2, '0')}';
+      } catch (e) {
+        // If timezone DB not initialized, fallback to device local
+        final local = dt.toLocal();
+        return '${local.day}/${local.month}/${local.year} - ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+      }
     } catch (_) {
       return iso;
     }
