@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-//import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/pages/paginaReunion.dart';
 import 'package:myapp/api_service.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -17,11 +16,38 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
   String? _error;
   List<dynamic> _meetings = [];
 
+  // --- FILTRADO ---
+  List<dynamic> _filteredMeetings = [];
+  String _selectedFilter = "Todas";
+
   @override
   void initState() {
     super.initState();
     _loadMeetings();
   }
+
+  // Convierte ISO string a DateTime local 
+  DateTime? _parse(String? raw) {
+    if (raw == null) return null;
+    try {
+      final dt = DateTime.parse(raw); // reconoce offsets como +00
+      return dt.toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Getter que indica si hay al menos una reunión en curso
+  bool get _hasOngoing {
+    final now = DateTime.now();
+    return _meetings.any((m) {
+      final start = _parse(m['start_time']);
+      final end = _parse(m['end_time']);
+      if (start == null || end == null) return false;
+      return now.isAfter(start) && now.isBefore(end);
+    });
+  }
+
 
   Future<void> _loadMeetings() async {
     setState(() {
@@ -35,16 +61,19 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
         setState(() {
           _error = 'No se pudieron obtener las reuniones.';
           _meetings = [];
+          _filteredMeetings = [];
         });
       } else {
         setState(() {
           _meetings = data;
+          _applyFilter(); // aplicar filtro después de cargar
         });
       }
     } catch (e) {
       setState(() {
         _error = e.toString();
         _meetings = [];
+        _filteredMeetings = [];
       });
     } finally {
       setState(() {
@@ -52,6 +81,55 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
       });
     }
   }
+
+  // Aplica el filtro seleccionado 
+  void _applyFilter() {
+    final now = DateTime.now(); // local time
+
+    DateTime? parse(String? raw) {
+      if (raw == null) return null;
+      try {
+        final dt = DateTime.parse(raw); 
+        return dt.toLocal(); // convertir UTC → local
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (_selectedFilter == "Todas") {
+      _filteredMeetings = List.from(_meetings);
+    }
+
+    // ===================== PRÓXIMAS =====================
+    else if (_selectedFilter == "Próximas") {
+      final limit = now.add(const Duration(days: 7));
+
+      _filteredMeetings = _meetings.where((m) {
+        final start = parse(m["start_time"]);
+        if (start == null) return false;
+
+        // - Reuniones hoy más adelante
+        // - Mañana, pasado, hasta 7 días
+        return start.isAfter(now) && start.isBefore(limit);
+      }).toList();
+    }
+
+    // ===================== EN CURSO =====================
+    else if (_selectedFilter == "En curso") {
+      _filteredMeetings = _meetings.where((m) {
+        final start = parse(m["start_time"]);
+        final end = parse(m["end_time"]); 
+
+        if (start == null || end == null) return false;
+
+        // now ∈ [start, end)
+        return now.isAfter(start) && now.isBefore(end);
+      }).toList();
+    }
+
+    setState(() {});
+  }
+
 
   String _formatDate(String? iso) {
     if (iso == null) return 'Fecha no disponible';
@@ -77,6 +155,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -118,10 +197,38 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                   // --- BOTONES DE FILTRO ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: const [
-                      FilterButton(text: 'Todas'),
-                      FilterButton(text: 'Próximas'),
-                      FilterButton(text: 'En curso'),
+                    children: [
+                      FilterButton(
+                        text: 'Todas',
+                        active: _selectedFilter == "Todas",
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = "Todas";
+                            _applyFilter();
+                          });
+                        },
+                      ),
+                      FilterButton(
+                        text: 'Próximas',
+                        active: _selectedFilter == "Próximas",
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = "Próximas";
+                            _applyFilter();
+                          });
+                        },
+                      ),
+                      FilterButton(
+                        text: 'En curso',
+                        showBadge: _hasOngoing,
+                        active: _selectedFilter == "En curso",
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = "En curso";
+                            _applyFilter();
+                          });
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -140,9 +247,9 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _meetings.length,
+                    itemCount: _filteredMeetings.length,
                     itemBuilder: (context, index) {
-                      final m = _meetings[index];
+                      final m = _filteredMeetings[index];
                       final title = m['title'] ?? 'Reunión sin título';
                       final start = _formatDate(m['start_time']);
                       final id = m['id'];
@@ -173,23 +280,54 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
 // --- BOTÓN DE FILTRO ---
 class FilterButton extends StatelessWidget {
   final String text;
-  const FilterButton({super.key, required this.text});
+  final bool active;
+  final bool showBadge;      // nuevo
+  final VoidCallback onTap;
+  const FilterButton({
+    super.key,
+    required this.text,
+    required this.active,
+    required this.onTap,
+    this.showBadge = false,  // por defecto false
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.grey[200],
-        foregroundColor: Colors.black,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Text(text),
+    return Stack(
+      clipBehavior: Clip.none, // permite posicionar el badge fuera del botón si es necesario
+      children: [
+        ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: active ? Colors.blue : Colors.grey[300],
+            foregroundColor: active ? Colors.white : Colors.black,
+            elevation: active ? 1 : 0,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text(text),
+        ),
+
+        // Badge posicionado en la esquina superior derecha del botón
+        if (showBadge)
+          Positioned(
+            right: -6, 
+            top: -6,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
+
 
 // --- TARJETA DE REUNIÓN ---
 class ReunionCard extends StatelessWidget {
