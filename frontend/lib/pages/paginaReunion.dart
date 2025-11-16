@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/api_service.dart';
 import 'package:myapp/pages/beacon_service.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:myapp/pages/crearReunion3.dart';
 
 class PaginaReunion extends StatefulWidget {
   final int meetingID;
@@ -106,10 +107,23 @@ class _PaginaReunionState extends State<PaginaReunion>{
         backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+                const SizedBox(height: 10),
+                ElevatedButton(
+              onPressed: () {//BOTON DE ASISTENTES NO BORRAR
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CrearReunion3()),
+                );
+              },
+              child: const Text("Asistentes"),
+            ),
+
             SesionCard(
               tituloSesion: _reunion?['title'] ?? 'Sin título',
               fecha: _formatDate(_reunion?['start_time']),

@@ -10,7 +10,7 @@ class CrearReunion1 extends StatefulWidget {
 }
 
 class _CrearReunion1State extends State<CrearReunion1> {
-  // ✅ Controllers para guardar los datos del formulario
+  //  Controllers para guardar los datos del formulario
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController duracionController = TextEditingController();
   final TextEditingController topicoController = TextEditingController();
@@ -133,7 +133,7 @@ class _CrearReunion1State extends State<CrearReunion1> {
               Center(
                 child: Column(
                   children: [
-                    // ✅ Botón siguiente -> pasa los datos a crearReunion2
+                    //  Botón siguiente -> pasa los datos a crearReunion2
                     SizedBox(
                       width: 200,
                       child: ElevatedButton(
@@ -151,7 +151,7 @@ class _CrearReunion1State extends State<CrearReunion1> {
                           ),
                         ),
                         onPressed: () {
-                          // ✅ Enviar datos a CrearReunion2
+                          //Enviar datos a CrearReunion2
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -178,7 +178,7 @@ class _CrearReunion1State extends State<CrearReunion1> {
 
                     const SizedBox(height: 20),
 
-                    // ✅ Botón cancelar
+                    // Botón cancelar
                     SizedBox(
                       width: 200,
                       child: ElevatedButton(

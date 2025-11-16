@@ -20,7 +20,7 @@ class ApiService {
   
   // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
   // Nota: IP actual de esta máquina es 192.168.1.129
-  static const String baseUrl = 'http://192.168.1.11:8000';
+  static const String baseUrl = 'http://192.168.1.13:8000';
 
   Future<bool> register(String name, String email, String password) async {
 
