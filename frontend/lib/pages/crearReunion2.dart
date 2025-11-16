@@ -23,8 +23,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
     final fecha = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2024),
-      lastDate: DateTime(2030),
+      firstDate: DateTime.now(), // Fecha de creación mínimo día actual
+      lastDate: DateTime.now().add(const Duration(days: 365 * 6)), // próximos 6 años como máximo
     );
 
     if (fecha != null) {
