@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/api_service.dart';
+import 'package:myapp/pages/beacon_service.dart';
 //import 'package:myapp/pages/crearReunion3.dart';
 
 class PaginaReunion extends StatefulWidget {
   final int meetingID;
-
+  
   const PaginaReunion({super.key, required this.meetingID});
 
   @override
@@ -15,11 +16,21 @@ class _PaginaReunionState extends State<PaginaReunion>{
   Map<String, dynamic>? _reunion;
   bool _loading = true;
   String? _error;
+  String? _beaconID;
+  final BeaconService _beaconService = BeaconService();
+  bool _isCheckingAttendance = false;
+  String _attendanceStatus = "Ausente";
 
   @override
   void initState() {
     super.initState();
     _cargarReunion();
+  }
+
+  @override
+  void dispose() {
+    _beaconService.stopScanning();
+    super.dispose();
   }
 
   Future<void> _cargarReunion() async {
@@ -28,8 +39,9 @@ class _PaginaReunionState extends State<PaginaReunion>{
       setState(() {
         _reunion = data;
         _loading = false;
-        }
-      );
+      });
+      _beaconID = _reunion?['beacon_id'];
+      print('Beacon ID: $_beaconID');
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -37,7 +49,39 @@ class _PaginaReunionState extends State<PaginaReunion>{
       });
     }
   }
+  Future<void> markAttendance() async {
+    if (_beaconID == null || _beaconID!.isEmpty) {
+      setState(() {
+        _attendanceStatus = "Error: No hay beacon configurado";
+      });
+      return;
+    }
 
+    setState(() {
+      _isCheckingAttendance = true;
+      _attendanceStatus = "Verificando...";
+    });
+
+    try {
+      final detected = await _beaconService.detectBeacon(_beaconID!);
+      
+      setState(() {
+        _isCheckingAttendance = false;
+        if (detected) {
+          _attendanceStatus = "Presente";
+          print('Asistencia marcada para la reunión ${widget.meetingID}');
+        } else {
+          _attendanceStatus = "Ausente";
+          print('Beacon no detectado para la reunión ${widget.meetingID}');
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isCheckingAttendance = false;
+        _attendanceStatus = "Error: $e";
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -91,7 +135,9 @@ class _PaginaReunionState extends State<PaginaReunion>{
             const SizedBox(height: 12),
           
             AsistenciaCard(
-              asistencia: "Ausente", 
+              asistencia: _attendanceStatus,
+              isChecking: _isCheckingAttendance,
+              onCheckAttendance: markAttendance,
             ),
           ],
         ),
@@ -326,21 +372,46 @@ class NotaCard extends StatelessWidget {
 
 class AsistenciaCard extends StatelessWidget {
   final String asistencia;
+  final bool isChecking;
+  final VoidCallback onCheckAttendance;
 
-  const AsistenciaCard({super.key, required this.asistencia});
+  const AsistenciaCard({
+    super.key, 
+    required this.asistencia,
+    this.isChecking = false,
+    required this.onCheckAttendance,
+  });
 
   @override
   Widget build(BuildContext context) {
-    bool esAusente = asistencia == "Ausente";
+    Color cardColor;
+    IconData iconData;
+    String statusText;
+
+    if (isChecking) {
+      cardColor = Colors.orange;
+      iconData = Icons.refresh;
+      statusText = "Verificando asistencia...";
+    } else if (asistencia == "Presente") {
+      cardColor = const Color.fromARGB(255, 61, 200, 72);
+      iconData = Icons.check;
+      statusText = "Tu asistencia ha sido registrada";
+    } else if (asistencia.startsWith("Error")) {
+      cardColor = Colors.grey;
+      iconData = Icons.error;
+      statusText = asistencia;
+    } else {
+      cardColor = const Color.fromARGB(255, 237, 78, 78);
+      iconData = Icons.close;
+      statusText = "Tu asistencia no ha sido registrada";
+    }
 
     return Container(
       height: 120,
       width: double.infinity,
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: esAusente
-            ? const Color.fromARGB(255, 237, 78, 78)
-            : const Color.fromARGB(255, 61, 200, 72),
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -358,32 +429,47 @@ class AsistenciaCard extends StatelessWidget {
 
           Row(
             children: [
-              Text(
-                esAusente
-                    ? "Tu asistencia no ha sido registrada"
-                    : "Tu asistencia ha sido registrada",
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.normal,
+              Expanded(
+                child: Text(
+                  statusText,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
               ),
 
-              const SizedBox(width: 20),
+              const SizedBox(width: 10),
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: esAusente
-                      ? const Color.fromARGB(255, 99, 28, 28)
-                      : const Color.fromARGB(255, 20, 69, 24),
+                  color: Colors.white.withOpacity(0.3),
                 ),
-
                 child: Icon(
-                  esAusente ? Icons.close : Icons.check,
+                  iconData,
                   color: Colors.white,
                 ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: isChecking ? null : onCheckAttendance,
+                style: ElevatedButton.styleFrom(
+                  shape: const CircleBorder(),
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                ),
+                child: isChecking 
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.refresh, color: Colors.white),
               ),
             ],
           ),

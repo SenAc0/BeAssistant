@@ -3,6 +3,7 @@ import 'package:myapp/pages/configurationPage.dart';
 import 'package:myapp/pages/historial.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/noHecho.dart';
+import 'package:myapp/pages/beacon_service.dart';
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 
@@ -21,7 +22,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     _pages = [
       const Historial(),
       const ListaReunionesScreen(),
-      const NoHechoPage(title: "Reportes"),
+      const BeaconDetector(),
       const ConfigurationPage(),
     ];
   }
