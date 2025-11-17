@@ -21,6 +21,8 @@ class _PaginaReunionState extends State<PaginaReunion> {
   final BeaconService _beaconService = BeaconService();
   bool _isCheckingAttendance = false;
   String _attendanceStatus = "Ausente";
+  bool _isCoordinator = false; // ← nuevo
+
 
   @override
   void initState() {
@@ -47,6 +49,14 @@ class _PaginaReunionState extends State<PaginaReunion> {
       setState(() {
         _error = e.toString();
         _loading = false;
+      });
+    }
+    final profile = await ApiService().getProfile();
+    if (profile != null) {
+      final currentUserId = profile["id"];
+      final coordinatorId = _reunion?["coordinator_id"];
+      setState(() {
+        _isCoordinator = currentUserId == coordinatorId;
       });
     }
   }
@@ -114,46 +124,21 @@ class _PaginaReunionState extends State<PaginaReunion> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
+               // BOTÓN SOLO PARA COORDINADOR
+            if (_isCoordinator)
               ElevatedButton(
-                onPressed: () async {
-                  if (_reunion == null) return;
-
-                  final coordinatorId = _reunion!["coordinator_id"];
-
-                  // Obtener perfil del usuario logueado
-                  final profile = await ApiService().getProfile();
-                  if (profile == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("No se pudo obtener el perfil"),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final currentUserId = profile["id"];
-
-                  if (currentUserId != coordinatorId) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Solo el coordinador puede acceder a esta sección",
-                        ),
-                      ),
-                    );
-                    return; // detener navegación
-                  }
-
-                  // Si es coordinador, navegar a CrearReunion3
+                onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CrearReunion3(meetingId: widget.meetingID),
+                      builder: (_) =>
+                          CrearReunion3(meetingId: widget.meetingID),
                     ),
                   );
                 },
                 child: const Text("Asistentes"),
               ),
+
 
             SesionCard(
               tituloSesion: _reunion?['title'] ?? 'Sin título',
