@@ -143,7 +143,10 @@ def list_attendance_for_meeting(meeting_id: int, db: Session = Depends(get_db), 
     """Lista todas las asistencias registradas para la reunión indicada."""
     return crud.list_attendance_for_meeting(db, meeting_id=meeting_id)
 
-
+@app.get("/attendance/my/{meeting_id}", response_model=schemas.Attendance)
+def get_my_attendance(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Obtiene la asistencia del usuario autenticado a la reunión indicada."""
+    return crud.get_attendance_for_user(db, user_id=current_user.id, meeting_id=meeting_id)
 
 # ================= Beacon =================
 @app.post("/beacons", response_model=schemas.Beacon)

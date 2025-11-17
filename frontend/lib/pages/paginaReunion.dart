@@ -3,7 +3,7 @@ import 'package:myapp/api_service.dart';
 import 'package:myapp/pages/beacon_service.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:myapp/pages/crearReunion3.dart';
-
+import 'package:myapp/api_service.dart';
 class PaginaReunion extends StatefulWidget {
   final int meetingID;
   
@@ -20,7 +20,8 @@ class _PaginaReunionState extends State<PaginaReunion>{
   String? _beaconID;
   final BeaconService _beaconService = BeaconService();
   bool _isCheckingAttendance = false;
-  String _attendanceStatus = "Ausente";
+  String _attendanceStatusCode = 'unknown';
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -43,6 +44,8 @@ class _PaginaReunionState extends State<PaginaReunion>{
       });
       _beaconID = _reunion?['beacon_id'];
       print('Beacon ID: $_beaconID');
+      // Cargar estado de asistencia del usuario para esta reunión
+      _loadAttendance();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -50,36 +53,66 @@ class _PaginaReunionState extends State<PaginaReunion>{
       });
     }
   }
+  
+  Future<void> _loadAttendance() async {
+    try {
+      final data = await _apiService.getMyAttendanceForMeeting(widget.meetingID);
+      setState(() {
+        if (data != null && data['status'] != null) {
+          // se espera status: 'present' | 'absent' | 'late'
+          _attendanceStatusCode = data['status'].toString();
+        } else {
+          _attendanceStatusCode = 'not_recorded';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _attendanceStatusCode = 'error';
+      });
+    }
+  }
+
   Future<void> markAttendance() async {
     if (_beaconID == null || _beaconID!.isEmpty) {
       setState(() {
-        _attendanceStatus = "Error: No hay beacon configurado";
+        _attendanceStatusCode = "error";
       });
       return;
     }
 
     setState(() {
       _isCheckingAttendance = true;
-      _attendanceStatus = "Verificando...";
+      _attendanceStatusCode = "Verificando...";
     });
 
     try {
       final detected = await _beaconService.detectBeacon(_beaconID!);
-      
+
+      if (!detected) {
+        setState(() {
+          _isCheckingAttendance = false;
+          _attendanceStatusCode = 'absent';
+        });
+        return;
+      }
+
+      // Si se detectó el beacon, llamar al backend para marcar asistencia
+      final success = await _apiService.markAttendance(widget.meetingID);
+
       setState(() {
         _isCheckingAttendance = false;
-        if (detected) {
-          _attendanceStatus = "Presente";
-          print('Asistencia marcada para la reunión ${widget.meetingID}');
+        if (success) {
+          _attendanceStatusCode = 'present';
+          print('Asistencia marcada en backend para la reunión ${widget.meetingID}');
         } else {
-          _attendanceStatus = "Ausente";
-          print('Beacon no detectado para la reunión ${widget.meetingID}');
+          _attendanceStatusCode = 'error';
+          print('Error marcando asistencia en backend para la reunión ${widget.meetingID}');
         }
       });
     } catch (e) {
       setState(() {
         _isCheckingAttendance = false;
-        _attendanceStatus = "Error: $e";
+        _attendanceStatusCode = 'error';
       });
     }
   }
@@ -149,7 +182,7 @@ class _PaginaReunionState extends State<PaginaReunion>{
             const SizedBox(height: 12),
           
             AsistenciaCard(
-              asistencia: _attendanceStatus,
+              statusCode: _attendanceStatusCode,
               isChecking: _isCheckingAttendance,
               onCheckAttendance: markAttendance,
             ),
@@ -399,13 +432,13 @@ class NotaCard extends StatelessWidget {
 }
 
 class AsistenciaCard extends StatelessWidget {
-  final String asistencia;
+  final String statusCode; // 'present' | 'absent' | 'late' | 'not_recorded' | 'error' | 'unknown'
   final bool isChecking;
   final VoidCallback onCheckAttendance;
 
   const AsistenciaCard({
-    super.key, 
-    required this.asistencia,
+    super.key,
+    required this.statusCode,
     this.isChecking = false,
     required this.onCheckAttendance,
   });
@@ -420,15 +453,20 @@ class AsistenciaCard extends StatelessWidget {
       cardColor = Colors.orange;
       iconData = Icons.refresh;
       statusText = "Verificando asistencia...";
-    } else if (asistencia == "Presente") {
+    } else if (statusCode == 'present') {
       cardColor = const Color.fromARGB(255, 61, 200, 72);
       iconData = Icons.check;
       statusText = "Tu asistencia ha sido registrada";
-    } else if (asistencia.startsWith("Error")) {
+    } else if (statusCode == 'late') {
+      cardColor = Colors.orange;
+      iconData = Icons.access_time;
+      statusText = "Has llegado tarde";
+    } else if (statusCode == 'error') {
       cardColor = Colors.grey;
       iconData = Icons.error;
-      statusText = asistencia;
+      statusText = "Error obteniendo/registrando asistencia";
     } else {
+      // 'absent', 'not_recorded', 'unknown', etc.
       cardColor = const Color.fromARGB(255, 237, 78, 78);
       iconData = Icons.close;
       statusText = "Tu asistencia no ha sido registrada";
