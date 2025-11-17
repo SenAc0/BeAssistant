@@ -17,7 +17,7 @@ class ApiService {
 
   // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
   // Nota: IP actual de esta máquina es 192.168.1.129
-  static const String baseUrl = 'http://192.168.1.13:8000';
+  static const String baseUrl = 'http://192.168.1.11:8000';
 
   Future<bool> register(String name, String email, String password) async {
     final url = Uri.parse('$baseUrl/register');
@@ -259,6 +259,57 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
       return jsonDecode(response.body);
     } else {
       throw Exception("Error obteniendo asistentes: ${response.body}");
+    }
+  }
+  Future<bool> markAttendance(int meetingID) async {
+    final token = await getToken();
+    if (token == null) return false;
+    final url = Uri.parse('$baseUrl/attendance/mark');
+    final response = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({'meeting_id': meetingID,
+                        'status': 'present'}),
+    );
+
+    print("Respuesta marcar asistencia: ${response.body}");
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+
+  /// Obtiene la asistencia del usuario autenticado para una reunión específica.
+  /// Retorna un mapa con la asistencia o `null` si no existe o hay error.
+
+
+  Future<Map<String, dynamic>?> getMyAttendanceForMeeting(int meetingID) async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return null;
+    }
+    final url = Uri.parse('$baseUrl/attendance/my/$meetingID');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+
+      final data = jsonDecode(response.body);
+      print("Asistencia obtenida: $data");
+
+      if (data is Map<String, dynamic>) return data;
+      
+      return data as Map<String, dynamic>?;
+    } else {
+      print("Error al obtener asistencia: ${response.body}");
+      return null;
     }
   }
 

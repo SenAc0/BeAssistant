@@ -240,6 +240,22 @@ def list_attendance_for_meeting(db: Session, meeting_id: int):
     return db.query(Attendance).filter(Attendance.meeting_id == meeting_id).all()
 
 
+
+
+
+def get_attendance_for_user(db: Session, user_id: int, meeting_id: int):
+    """Get attendance record for a specific user and meeting."""
+    attendance = (
+        db.query(Attendance)
+        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
+        .first()
+    )
+    if not attendance:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    return attendance
+
+
+
 # ================= Beacon =================
 def create_beacon(db: Session, beacon: BeaconCreate):
     db_beacon = Beacon(

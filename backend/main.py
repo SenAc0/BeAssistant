@@ -159,6 +159,8 @@ def get_my_attendance(meeting_id: int, db: Session = Depends(get_db), current_us
     """Obtiene la asistencia del usuario autenticado a la reunión indicada."""
     return crud.get_attendance_for_user(db, user_id=current_user.id, meeting_id=meeting_id)
 
+
+
 # ================= Beacon =================
 @app.post("/beacons", response_model=schemas.Beacon)
 def create_beacon(beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
