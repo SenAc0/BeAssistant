@@ -1,59 +1,153 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/api_service.dart';
 
-class CrearReunion3 extends StatelessWidget {
-  const CrearReunion3({super.key});
+class CrearReunion3 extends StatefulWidget {
+  final int meetingId;
+
+  const CrearReunion3({super.key, required this.meetingId});
+
+  @override
+  State<CrearReunion3> createState() => _CrearReunion3State();
+}
+
+class _CrearReunion3State extends State<CrearReunion3> {
+  List<int> asistentesSeleccionados = [];
+  bool _cargadoInicial =
+      false; // evita sobrescribir la selección al reconstruir
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Asistentes'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         centerTitle: true,
         backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Text(
-              'Agregar asistentes',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
-            ),
 
-            const SizedBox(height: 6),
+      //  CARGA USUARIOS + ASISTENTES YA AGREGADOS
+      body: FutureBuilder(
+        future: Future.wait([
+          ApiService().getUsers(),
+          ApiService().getAttendanceForMeeting(widget.meetingId),
+        ]),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            // --- EJEMPLO LISTA DE REUNIONES ---
-            Expanded(
-              child: ListView(
-                children: const [
-                  AgregarAsistenteCard(nombre: 'algo ', correo: 'algo@udec.cl'),
-                  AgregarAsistenteCard(
-                    nombre: 'algo 2',
-                    correo: 'algo2@gmail.com',
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final usuarios = snapshot.data![0] as List<dynamic>;
+          final asistentes = snapshot.data![1] as List<dynamic>;
+
+          // Cargar asistentes preseleccionados solo la primera vez
+          if (!_cargadoInicial) {
+            asistentesSeleccionados = asistentes
+                .map<int>((a) => a["user_id"] as int)
+                .toList();
+            _cargadoInicial = true;
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+                const Text(
+                  'Agregar asistentes',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+                ),
+                const SizedBox(height: 10),
+
+                // LISTA DE USUARIOS
+                Expanded(
+                  child: ListView(
+                    children: usuarios.map((user) {
+                      final id = user["id"];
+                      final yaSeleccionado = asistentesSeleccionados.contains(
+                        id,
+                      );
+
+                      return AgregarAsistenteCard(
+                        key: Key("user_$id"),
+                        userId: id,
+                        nombre: user["name"],
+                        correo: user["email"],
+                        inicialmenteSeleccionado: yaSeleccionado,
+                        onSelected: (id, selected) {
+                          setState(() {
+                            if (selected) {
+                              if (!asistentesSeleccionados.contains(id)) {
+                                asistentesSeleccionados.add(id);
+                              }
+                            } else {
+                              asistentesSeleccionados.remove(id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 10),
+                Center(child: BotonesReunion3(onConfirm: guardarAsistentes)),
+              ],
             ),
-            Center(child: BotonesReunion3()),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+
+  // GUARDAR ASISTENTES
+  Future<void> guardarAsistentes() async {
+    if (asistentesSeleccionados.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Seleccione al menos un asistente")),
+      );
+      return;
+    }
+
+    bool todoOK = true;
+
+    for (int userId in asistentesSeleccionados) {
+      bool ok = await ApiService().addAssistant(widget.meetingId, userId);
+      if (!ok) {
+        todoOK = false;
+      }
+    }
+
+    if (todoOK) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Asistentes agregados correctamente")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Ocurrió un error con algunos usuarios")),
+      );
+    }
+
+    Navigator.pop(context);
+  }
 }
 
+// BOTONES DE CONFIRMAR/CANCELAR
 class BotonesReunion3 extends StatelessWidget {
-  const BotonesReunion3({super.key});
+  final VoidCallback onConfirm;
+
+  const BotonesReunion3({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Botón de siguiente
         SizedBox(
           width: 200,
           child: ElevatedButton(
@@ -65,14 +159,11 @@ class BotonesReunion3 extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: onConfirm,
             child: const Text('Confirmar', style: TextStyle(fontSize: 16)),
           ),
         ),
         const SizedBox(height: 20),
-        // Botón de cancelar
         SizedBox(
           width: 200,
           child: ElevatedButton(
@@ -96,13 +187,21 @@ class BotonesReunion3 extends StatelessWidget {
 }
 
 // --- WIDGET TARJETA DE REUNIÓN ---
+
 class AgregarAsistenteCard extends StatefulWidget {
+  final int userId;
   final String nombre;
   final String correo;
+  final bool inicialmenteSeleccionado;
+  final Function(int userId, bool selected) onSelected;
+
   const AgregarAsistenteCard({
     super.key,
+    required this.userId,
     required this.nombre,
     required this.correo,
+    required this.onSelected,
+    this.inicialmenteSeleccionado = false,
   });
 
   @override
@@ -110,7 +209,14 @@ class AgregarAsistenteCard extends StatefulWidget {
 }
 
 class _AgregarAsistenteCardState extends State<AgregarAsistenteCard> {
-  bool _seleccionado = false;
+  late bool _seleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    _seleccionado = widget.inicialmenteSeleccionado;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -130,15 +236,11 @@ class _AgregarAsistenteCardState extends State<AgregarAsistenteCard> {
           color: _seleccionado ? Colors.white : Colors.black,
         ),
         onTap: () {
-          if (!_seleccionado) {
-            setState(() {
-              _seleccionado = !_seleccionado;
-            });
-          } else {
-            setState(() {
-              _seleccionado = !_seleccionado;
-            });
-          }
+          setState(() {
+            _seleccionado = !_seleccionado;
+          });
+
+          widget.onSelected(widget.userId, _seleccionado);
         },
       ),
     );

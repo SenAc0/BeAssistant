@@ -132,11 +132,22 @@ def my_attendance(db: Session = Depends(get_db), current_user=Depends(auth.get_c
 
 
 @app.post("/attendance", response_model=schemas.Attendance)
-def add_attendance(payload: schemas.AttendanceAssign, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
-    """Asigna o actualiza la asistencia de un usuario a una reunión (upsert),
-    sin restricciones por ventana de tiempo.
-    """
-    return crud.add_attendance(db, user_id=payload.user_id, meeting_id=payload.meeting_id, status=payload.status or "absent")
+# Asigna o actualiza la asistencia de un usuario a una reunión (upsert),
+# sin restricciones por ventana de tiempo. Solo el coordinador puede agregar asistentes.
+def add_attendance(payload: schemas.AttendanceAssign, 
+                   db: Session = Depends(get_db), 
+                   current_user=Depends(auth.get_current_user)):
+    
+    # Validar que el coordinador sea el que modifica la asistencia
+    meeting = crud.get_meeting(db, payload.meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    if meeting.coordinator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the coordinator can add assistants")
+
+    return crud.add_attendance(db,user_id=payload.user_id,meeting_id=payload.meeting_id,status=payload.status or "absent")
+
 
 @app.get("/attendance/meeting/{meeting_id}", response_model=List[schemas.Attendance])
 def list_attendance_for_meeting(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):

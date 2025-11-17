@@ -1,29 +1,25 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-
   // Setear la url para conectar con el backend
-  
 
   // En caso de usar un emulador de Android, usar esta dirección IP para localhost
   //static const String baseUrl = 'http://10.0.2.2:8000';
 
-
   // En caso de usar ngrok, insertar la url ngrok y usar esto
   //static const String baseUrl = 'https://7c599f4c595a.ngrok-free.app';
 
-
   // Para ejecutar en Linux/Desktop (mismo equipo que el backend Docker)
   //static const String baseUrl = 'http://localhost:8000';
-  
+
   // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
   // Nota: IP actual de esta máquina es 192.168.1.129
-  static const String baseUrl = 'http://192.168.1.11:8000';
+  static const String baseUrl = 'http://192.168.1.13:8000';
 
   Future<bool> register(String name, String email, String password) async {
-
     final url = Uri.parse('$baseUrl/register');
     final response = await http.post(
       url,
@@ -39,8 +35,6 @@ class ApiService {
     }
   }
 
-
-
   Future<bool> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/login');
     final response = await http.post(
@@ -54,18 +48,20 @@ class ApiService {
       final token = data['access_token'];
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);              // guarda el token
-      print("Token guardado: $token"); 
+      await prefs.setString('token', token); // guarda el token
+      print("Token guardado: $token");
       return true;
     } else {
       print("Error al iniciar sesión: ${response.body}");
       return false;
     }
   }
+
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
@@ -100,6 +96,7 @@ class ApiService {
       return null;
     }
   }
+
   /// Obtiene las reuniones del usuario autenticado. Retorna `List` o `null`.
   Future<List<dynamic>?> getMyMeetings() async {
     final token = await getToken();
@@ -134,25 +131,25 @@ class ApiService {
     if (token == null) {
       print("No hay token disponible");
       return null;
-    } 
+    }
     final url = Uri.parse('$baseUrl/meeting/$meetingID');
     final response = await http.get(
       url,
-      headers:{
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
     );
-    if (response.statusCode == 200 ) {
+    if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       print("Reunión obtenida: $data");
       return data;
-
     } else {
       print("Error al obtener la reunión: ${response.body}");
       return null;
     }
   }
+
   //perfil
   Future<Map<String, dynamic>?> getProfile() async {
     final token = await getToken();
@@ -175,6 +172,7 @@ class ApiService {
       return null;
     }
   }
+
   Future<bool> createMeeting(Map<String, dynamic> meetingData) async {
     final token = await getToken();
     if (token == null) return false;
@@ -194,53 +192,74 @@ class ApiService {
 
     return response.statusCode == 200 || response.statusCode == 201;
   }
-  Future<bool> markAttendance(int meetingID) async {
-    final token = await getToken();
-    if (token == null) return false;
 
-    final url = Uri.parse('$baseUrl/attendance/mark');
+  /// Obtener la lista de usuarios
+  Future<List<dynamic>> getUsers() async {
+    final token = await getToken();
+    if (token == null) {
+      throw Exception("Token no disponible");
+    }
+
+    final url = Uri.parse('$baseUrl/users');
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al obtener usuarios: ${response.body}");
+    }
+  }
+/// Agregar asistente a una reunión
+Future<bool> addAssistant(int meetingId, int userId) async {
+    final url = Uri.parse("$baseUrl/attendance");
+
+    final body = {
+      "user_id": userId,
+      "meeting_id": meetingId,
+      "status": "absent",
+    };
+
+    final token = await getToken();
 
     final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(body),
+    );
+
+    print("POST $url -> ${response.statusCode}");
+    print("Body: ${response.body}");
+
+    return response.statusCode == 200;
+  }
+/// Obtener la lista de asistentes de una reunión
+Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/attendance/meeting/$meetingId');
+
+    final response = await http.get(
       url,
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({'meeting_id': meetingID,
-                        'status': 'present'}),
-    );
-
-    print("Respuesta marcar asistencia: ${response.body}");
-
-    return response.statusCode == 200 || response.statusCode == 201;
-  }
-  /// Obtiene la asistencia del usuario autenticado para una reunión específica.
-  /// Retorna un mapa con la asistencia o `null` si no existe o hay error.
-  Future<Map<String, dynamic>?> getMyAttendanceForMeeting(int meetingID) async {
-    final token = await getToken();
-    if (token == null) {
-      print("No hay token disponible.");
-      return null;
-    }
-
-    final url = Uri.parse('$baseUrl/attendance/my/$meetingID');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print("Asistencia obtenida: $data");
-      if (data is Map<String, dynamic>) return data;
-      return data as Map<String, dynamic>?;
+      return jsonDecode(response.body);
     } else {
-      print("Error al obtener asistencia: ${response.body}");
-      return null;
+      throw Exception("Error obteniendo asistentes: ${response.body}");
     }
   }
-  
+
 }

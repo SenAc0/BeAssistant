@@ -134,12 +134,30 @@ def get_meeting(db: Session, meeting_id: int):
 
 
 def list_meetings_for_user(db: Session, user_id: int):
-    meetings = db.query(Meeting).filter(Meeting.coordinator_id == user_id).order_by(Meeting.start_time.desc().nullslast()).all()
+    # Reuniones donde es coordinador
+    coordinator_meetings = (
+        db.query(Meeting)
+        .filter(Meeting.coordinator_id == user_id)
+    )
+
+    # Reuniones donde fue agregado como asistente
+    attendee_meetings = (
+        db.query(Meeting)
+        .join(Attendance, Attendance.meeting_id == Meeting.id)
+        .filter(Attendance.user_id == user_id)
+    )
+
+    # Unir ambas sin duplicados
+    meetings = coordinator_meetings.union(attendee_meetings) \
+        .order_by(Meeting.start_time.desc().nullslast()) \
+        .all()
+
+    # Convertir a horario de Chile
     for m in meetings:
-        print("antes", m.start_time)
         _convert_meeting_to_chile(m)
-        print("despues", m.start_time)
+
     return meetings
+
 
 
 # ================= Attendance =================
@@ -221,17 +239,6 @@ def list_attendance_for_meeting(db: Session, meeting_id: int):
     """Return all attendance rows for a given meeting id."""
     return db.query(Attendance).filter(Attendance.meeting_id == meeting_id).all()
 
-
-def get_attendance_for_user(db: Session, user_id: int, meeting_id: int):
-    """Get attendance record for a specific user and meeting."""
-    attendance = (
-        db.query(Attendance)
-        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
-        .first()
-    )
-    if not attendance:
-        raise HTTPException(status_code=404, detail="Attendance record not found")
-    return attendance
 
 # ================= Beacon =================
 def create_beacon(db: Session, beacon: BeaconCreate):
