@@ -6,19 +6,23 @@ from typing import List, Optional
 
 
 class UserBase(BaseModel):
+    """Base fields for a user (shared by create/read)."""
     email: str
     name: str
 
 class UserCreate(UserBase):
+    """Payload to register a new user."""
     password: str
 
 class User(UserBase):
+    """User model returned by the API."""
     id: int
     model_config = {"from_attributes": True}
 
 
 # ========= Meetings =========
 class MeetingBase(BaseModel):
+    """Base meeting fields used for create/update and read."""
     title: str
     description: Optional[str] = None
     start_time: Optional[datetime] = None
@@ -30,12 +34,14 @@ class MeetingBase(BaseModel):
 
 
 class MeetingCreate(MeetingBase):
+    """Payload to create a meeting; end_time is computed from duration."""
     title: str
     # duration in minutes to compute end_time
     duration_minutes: int
 
 
 class Meeting(MeetingBase):
+    """Meeting model returned by list/detail endpoints."""
     id: int
     created_at: datetime
     end_time: Optional[datetime] = None
@@ -46,6 +52,7 @@ class Meeting(MeetingBase):
 
 # Schema con relaciones anidadas para detalles completos
 class MeetingDetail(MeetingBase):
+    """Meeting detail including coordinator and beacon location."""
     id: int
     created_at: datetime
     end_time: Optional[datetime] = None
@@ -58,15 +65,25 @@ class MeetingDetail(MeetingBase):
 
 # ========= Attendance =========
 class AttendanceBase(BaseModel):
+    """Base fields for marking attendance for the current user."""
     meeting_id: int
     status: Optional[str] = "absent"  # present | late | absent
 
 
 class AttendanceCreate(AttendanceBase):
+    """Payload to mark the authenticated user's attendance."""
     pass
 
 
+class AttendanceAssign(BaseModel):
+    """Payload to assign/update attendance for a specific user and meeting."""
+    user_id: int
+    meeting_id: int
+    status: Optional[str] = "absent"
+
+
 class Attendance(BaseModel):
+    """Attendance record returned by the API."""
     id: int
     user_id: int
     meeting_id: int
@@ -78,14 +95,17 @@ class Attendance(BaseModel):
 
 # ========= Beacon =========
 class BeaconBase(BaseModel):
+    """Base fields for a beacon device."""
     major: int
     minor: int
     location: str
 
 class BeaconCreate(BeaconBase):
+    """Payload to register a new beacon."""
     id: str
 
 class Beacon(BeaconBase):
+    """Beacon resource as returned by the API."""
     id: str
     last_used: datetime
     

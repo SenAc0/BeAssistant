@@ -81,6 +81,12 @@ def get_me(current_user=Depends(auth.get_current_user)):
     return current_user
 
 
+# ================= Users =================
+@app.get("/users", response_model=List[schemas.User])
+def list_users(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    return crud.get_users(db)
+
+
 # ================= Meetings =================
 @app.post("/meetings", response_model=schemas.Meeting)
 def create_meeting(meeting: schemas.MeetingCreate, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
@@ -113,12 +119,29 @@ def get_meeting_for_user(meeting_id: int, db: Session = Depends(get_db)):
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
 def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Marca la asistencia del usuario autenticado a la reunión indicada.
+    Valida que la reunión esté en curso (ventana de tiempo) y actualiza o crea el registro.
+    """
     return crud.mark_attendance(db, user_id=current_user.id, meeting_id=payload.meeting_id, status=payload.status or "present")
 
 
 @app.get("/attendance/my", response_model=List[schemas.Attendance])
 def my_attendance(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Devuelve todas las asistencias del usuario autenticado."""
     return crud.list_attendance_for_user(db, user_id=current_user.id)
+
+
+@app.post("/attendance", response_model=schemas.Attendance)
+def add_attendance(payload: schemas.AttendanceAssign, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Asigna o actualiza la asistencia de un usuario a una reunión (upsert),
+    sin restricciones por ventana de tiempo.
+    """
+    return crud.add_attendance(db, user_id=payload.user_id, meeting_id=payload.meeting_id, status=payload.status or "absent")
+
+@app.get("/attendance/meeting/{meeting_id}", response_model=List[schemas.Attendance])
+def list_attendance_for_meeting(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Lista todas las asistencias registradas para la reunión indicada."""
+    return crud.list_attendance_for_meeting(db, meeting_id=meeting_id)
 
 
 

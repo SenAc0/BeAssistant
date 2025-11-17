@@ -143,7 +143,7 @@ def list_meetings_for_user(db: Session, user_id: int):
 
 
 # ================= Attendance =================
-def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "present") -> Attendance:
+def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "absent") -> Attendance:
     # Get raw meeting from DB (UTC) for time comparison
     meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
     if not meeting:
@@ -188,6 +188,38 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "p
 def list_attendance_for_user(db: Session, user_id: int):
     return db.query(Attendance).filter(Attendance.user_id == user_id).all()
 
+
+def add_attendance(db: Session, user_id: int, meeting_id: int, status: str = "absent") -> Attendance:
+    # Validate user and meeting exist
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Upsert attendance without time window restrictions
+    existing = (
+        db.query(Attendance)
+        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
+        .first()
+    )
+    if existing:
+        existing.status = status
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    att = Attendance(user_id=user_id, meeting_id=meeting_id, status=status)
+    db.add(att)
+    db.commit()
+    db.refresh(att)
+    return att
+
+
+def list_attendance_for_meeting(db: Session, meeting_id: int):
+    """Return all attendance rows for a given meeting id."""
+    return db.query(Attendance).filter(Attendance.meeting_id == meeting_id).all()
 
 
 # ================= Beacon =================
