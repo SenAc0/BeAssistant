@@ -97,6 +97,63 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
         # convert to UTC for saving (tz-aware UTC)
         start_utc = start.astimezone(timezone.utc)
         end_utc = start_utc + timedelta(minutes=meeting.duration_minutes)
+    # If we don't have times, skip overlap validation and let it be created as-is
+
+    # ===== Overlap validation (only if we have a time window) =====
+    if start_utc and end_utc:
+        # If a beacon_id is provided, optionally validate it exists
+        beacon_obj = None
+        if meeting.beacon_id:
+            beacon_obj = db.query(Beacon).filter(Beacon.id == meeting.beacon_id).first()
+            if not beacon_obj:
+                raise HTTPException(status_code=404, detail="Beacon not found")
+
+        # 1) Same beacon overlap check
+        if meeting.beacon_id:
+            conflict_beacon = (
+                db.query(Meeting)
+                .filter(
+                    Meeting.beacon_id == meeting.beacon_id,
+                    Meeting.start_time != None,
+                    Meeting.end_time != None,
+                    Meeting.start_time < end_utc,
+                    Meeting.end_time > start_utc,
+                )
+                .first()
+            )
+            if conflict_beacon:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Overlap detected: another meeting is scheduled on the same beacon "
+                        "within the selected time window"
+                    ),
+                )
+
+        # 2) Same location (room) overlap check
+        # Determine the location to compare: payload location, otherwise beacon's location
+        location_key = meeting.location or (beacon_obj.location if beacon_obj else None)
+        if location_key:
+            conflict_location = (
+                db.query(Meeting)
+                .join(Beacon, Meeting.beacon_id == Beacon.id)
+                .filter(
+                    Beacon.location == location_key,
+                    Meeting.start_time != None,
+                    Meeting.end_time != None,
+                    Meeting.start_time < end_utc,
+                    Meeting.end_time > start_utc,
+                )
+                .first()
+            )
+            if conflict_location:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Overlap detected: another meeting is scheduled in the same location "
+                        "within the selected time window"
+                    ),
+                )
 
     db_meeting = Meeting(
         title=meeting.title,
