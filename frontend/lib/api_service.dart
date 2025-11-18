@@ -13,11 +13,11 @@ class ApiService {
   //static const String baseUrl = 'https://7c599f4c595a.ngrok-free.app';
 
   // Para ejecutar en Linux/Desktop (mismo equipo que el backend Docker)
-  //static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://localhost:8000';
 
   // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
   // Nota: IP actual de esta máquina es 192.168.1.129
-  static const String baseUrl = 'http://192.168.18.207:8000';
+  //static const String baseUrl = 'http://192.168.18.207:8000';
 
   Future<bool> register(String name, String email, String password) async {
     final url = Uri.parse('$baseUrl/register');
@@ -312,5 +312,30 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
       return null;
     }
   }
+
+  Future<List<dynamic>> getBeacons() async {
+    final url = Uri.parse('$baseUrl/meetings/available-beacons');
+
+    final token = await getToken();
+    if (token == null) {
+      throw Exception("No autorizado: falta token");
+    }
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error al obtener beacons: ${response.body}");
+      throw Exception("Error al obtener lista de beacons");
+    }
+  }
+
 
 }

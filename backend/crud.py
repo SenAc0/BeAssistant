@@ -1,5 +1,5 @@
 from models import User, Meeting, Attendance, Beacon
-from schemas import UserCreate, MeetingCreate, BeaconCreate
+from schemas import UserCreate, MeetingCreate, BeaconCreate, BeaconUpdate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi import HTTPException
@@ -275,6 +275,8 @@ def get_beacons(db: Session):
 def get_beacon(db: Session, beacon_id: str):
     return db.query(Beacon).filter(Beacon.id == beacon_id).first()
 
+def get_beacon_by_location(db: Session, location: str):
+    return db.query(Beacon).filter(Beacon.location == location).first()
 def delete_beacon(db: Session, beacon_id: str):
     beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
     if beacon:
@@ -282,13 +284,20 @@ def delete_beacon(db: Session, beacon_id: str):
         db.commit()
     return beacon
 
-def update_beacon(db: Session, beacon_id: str, beacon_data: BeaconCreate):
+def update_beacon(db: Session, beacon_id: str, beacon_data: BeaconUpdate):
     beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
     if not beacon:
         return None
-    beacon.major = beacon_data.major
-    beacon.minor = beacon_data.minor
-    beacon.location = beacon_data.location
+
+    if beacon_data.major is not None:
+        beacon.major = beacon_data.major
+
+    if beacon_data.minor is not None:
+        beacon.minor = beacon_data.minor
+
+    if beacon_data.location is not None:
+        beacon.location = beacon_data.location
+
     beacon.last_used = datetime.now(timezone.utc)
 
     db.commit()

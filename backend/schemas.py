@@ -30,6 +30,7 @@ class MeetingBase(BaseModel):
     topics: Optional[str] = None
     repeat_weekly: Optional[bool] = False
     note: Optional[str] = None
+    location: Optional[str] = None
     beacon_id: Optional[str] = None
 
 
@@ -103,6 +104,11 @@ class BeaconBase(BaseModel):
 class BeaconCreate(BeaconBase):
     """Payload to register a new beacon."""
     id: str
+
+class BeaconUpdate(BaseModel):
+    major: int | None = None
+    minor: int | None = None
+    location: str | None = None
 
 class Beacon(BeaconBase):
     """Beacon resource as returned by the API."""

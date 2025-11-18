@@ -178,7 +178,7 @@ def get_beacon(beacon_id: str, db: Session = Depends(get_db)):
     return beacon
 
 @app.put("/beacons/{beacon_id}", response_model=schemas.Beacon)
-def update_beacon(beacon_id: str, beacon: schemas.BeaconCreate, db: Session = Depends(get_db)):
+def update_beacon(beacon_id: str, beacon: schemas.BeaconUpdate, db: Session = Depends(get_db)):
     updated = crud.update_beacon(db, beacon_id, beacon)
     if not updated:
         raise HTTPException(status_code=404, detail=BEACON_NOT_FOUND)
@@ -190,3 +190,10 @@ def delete_beacon(beacon_id: str, db: Session = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=404, detail=BEACON_NOT_FOUND)
     return {"message": "Beacon deleted successfully"}
+
+# Relationships
+
+# Devuelve la lista de todos los beacons disponibles para asociar a una reunión.
+@app.get("/meetings/available-beacons", response_model=List[schemas.Beacon])
+def get_available_beacons(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    return crud.get_beacons(db)

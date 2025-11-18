@@ -14,23 +14,28 @@ class CrearReunion2 extends StatefulWidget {
 class _CrearReunion2State extends State<CrearReunion2> {
   DateTime? fechaSeleccionada;
   TimeOfDay? horaSeleccionada;
-  String? salaSeleccionada;
+  String? beaconSeleccionado; // <-- El ID real del beacon elegido
 
+  late Future<List<dynamic>> futureBeacons;
   Future<bool>? futureCrear;
 
-  // --- PICKERS ---
+  @override
+  void initState() {
+    super.initState();
+    futureBeacons = ApiService().getBeacons();
+  }
+
+  // -------------------- PICKERS -----------------------
   Future<void> seleccionarFecha() async {
     final fecha = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(), // Fecha de creación mínimo día actual
-      lastDate: DateTime.now().add(const Duration(days: 365 * 6)), // próximos 6 años como máximo
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 6)),
     );
 
     if (fecha != null) {
-      setState(() {
-        fechaSeleccionada = fecha;
-      });
+      setState(() => fechaSeleccionada = fecha);
     }
   }
 
@@ -41,37 +46,37 @@ class _CrearReunion2State extends State<CrearReunion2> {
     );
 
     if (hora != null) {
-      setState(() {
-        horaSeleccionada = hora;
-      });
+      setState(() => horaSeleccionada = hora);
     }
   }
 
-  // --- ENVIAR A LA API ---
+  // -------------------- ENVIAR REUNIÓN -----------------------
   Future<bool> enviarReunion() async {
     final api = ApiService();
 
- final data = {
-  "title": widget.dataReunion["title"],
-  "description": widget.dataReunion["description"],
-  "topics": widget.dataReunion["topics"],
-  "note": widget.dataReunion["note"],
-  "duration_minutes": widget.dataReunion["duration"],        
-  "repeat_weekly": false,                                    // O según  UI
-  "beacon_id": "fda50693a4e24fb1afcfc6eb07647825271b4cb99c",                             // Cambiar según  backend
-  "start_time": fechaSeleccionada != null && horaSeleccionada != null
-      ? DateTime(
-          fechaSeleccionada!.year,
-          fechaSeleccionada!.month,
-          fechaSeleccionada!.day,
-          horaSeleccionada!.hour,
-          horaSeleccionada!.minute,
-        ).toIso8601String()
-      : null,
-};
+    final data = {
+      "title": widget.dataReunion["title"],
+      "description": widget.dataReunion["description"],
+      "topics": widget.dataReunion["topics"],
+      "note": widget.dataReunion["note"],
+      "duration_minutes": widget.dataReunion["duration"],
+      "repeat_weekly": false,
+      "beacon_id": beaconSeleccionado, // <-- ahora se envía el ID real del beacon
+      "start_time": fechaSeleccionada != null && horaSeleccionada != null
+          ? DateTime(
+        fechaSeleccionada!.year,
+        fechaSeleccionada!.month,
+        fechaSeleccionada!.day,
+        horaSeleccionada!.hour,
+        horaSeleccionada!.minute,
+      ).toIso8601String()
+          : null,
+    };
+
     return await api.createMeeting(data);
   }
 
+  // --------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,41 +87,30 @@ class _CrearReunion2State extends State<CrearReunion2> {
         backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
-
-      // -------------------------- BODY -------------------------------
       body: futureCrear == null
           ? _formulario()
           : FutureBuilder<bool>(
-              future: futureCrear,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+        future: futureCrear,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                if (snapshot.hasError) {
-                  return _mensajeResultado(
-                    "Error al crear la reunión",
-                    Colors.red,
-                  );
-                }
+          if (snapshot.hasError) {
+            return _mensajeResultado("Error al crear la reunión", Colors.red);
+          }
 
-                if (snapshot.data == true) {
-                  return _mensajeResultado(
-                    "Reunión creada con éxito",
-                    Colors.green,
-                  );
-                }
+          if (snapshot.data == true) {
+            return _mensajeResultado("Reunión creada con éxito", Colors.green);
+          }
 
-                return _mensajeResultado(
-                  "No se pudo crear la reunión",
-                  Colors.red,
-                );
-              },
-            ),
+          return _mensajeResultado("No se pudo crear la reunión", Colors.red);
+        },
+      ),
     );
   }
 
-  // ------------------ WIDGET FORMULARIO --------------------
+  // -------------------- FORMULARIO -----------------------
   Widget _formulario() {
     return SingleChildScrollView(
       child: Padding(
@@ -174,14 +168,14 @@ class _CrearReunion2State extends State<CrearReunion2> {
 
             const SizedBox(height: 20),
 
-            // Sala / Beacon
+            // --------------------------------------------------
             const Text("Sala / Beacon", style: TextStyle(fontSize: 16)),
             const SizedBox(height: 6),
 
-            _salaCard("Beacon A1-1", "Activo", "Oficina 1"),
-            _salaCard("Beacon A1-2", "Inactivo", "Oficina 2"),
+            _listaBeacons(),
 
             const SizedBox(height: 20),
+
             _botones(),
           ],
         ),
@@ -189,79 +183,111 @@ class _CrearReunion2State extends State<CrearReunion2> {
     );
   }
 
-  // ------------------- TARJETA DE SALAS ------------------------
-  Widget _salaCard(String titulo, String estado, String lugar) {
-    bool seleccionado = salaSeleccionada == titulo;
+  // -------------------- LISTA DE BEACONS -----------------------
+  Widget _listaBeacons() {
+    return FutureBuilder<List<dynamic>>(
+      future: futureBeacons,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final beacons = snapshot.data!;
+
+        return Column(
+          children: beacons.map((b) {
+            final id = b["id"];
+            final location = b["location"] ?? "Sin sala";
+            final activo = true; // Puedes cambiar esto según tu backend
+
+            return _salaCard(
+              id, // visible como título
+              activo ? "Activo" : "Inactivo",
+              location,
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  // -------------------- TARJETA -----------------------
+  Widget _salaCard(String id, String estado, String sala) {
+    bool seleccionado = beaconSeleccionado == id;
 
     return GestureDetector(
-      onTap: () => setState(() => salaSeleccionada = titulo),
+      onTap: () => setState(() => beaconSeleccionado = id),
       child: Card(
         color: seleccionado ? Colors.green[300] : Colors.white,
         margin: const EdgeInsets.only(bottom: 10),
         child: ListTile(
           title: Text(
-            titulo,
+            id,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          subtitle: Text("$estado | $lugar"),
+          subtitle: Text("$estado | $sala"),
         ),
       ),
     );
   }
 
-  // -------------------- BOTONES ------------------------
+  // -------------------- BOTONES -----------------------
   Widget _botones() {
     return Center(
-    child:Column(
-      children: [
-        // Confirmar
-        SizedBox(
-          width: 200,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),),
+      child: Column(
+        children: [
+          // Confirmar
+          SizedBox(
+            width: 200,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                if (fechaSeleccionada == null ||
+                    horaSeleccionada == null ||
+                    beaconSeleccionado == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Completa todos los campos")),
+                  );
+                  return;
+                }
+
+                setState(() {
+                  futureCrear = enviarReunion();
+                });
+              },
+              child: const Text("Confirmar"),
             ),
-            onPressed: () {
-              if (fechaSeleccionada == null ||
-                  horaSeleccionada == null ||
-                  salaSeleccionada == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Completa todos los campos")),
-                );
-                return;
-              }
-
-              setState(() {
-                futureCrear = enviarReunion();
-              });
-            },
-            child: const Text("Confirmar"),
           ),
-        ),
 
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-        // Cancelar
-        SizedBox(
-          width: 200,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),),
+          // Cancelar
+          SizedBox(
+            width: 200,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => volverAlInicio(context),
+              child: const Text("Cancelar"),
             ),
-            onPressed: () => volverAlInicio(context),
-            child: const Text("Cancelar"),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 
-  // ------------------- RESULTADO FINAL ------------------------
+  // -------------------- RESULTADO -----------------------
   Widget _mensajeResultado(String texto, Color color) {
     return Center(
       child: Column(
