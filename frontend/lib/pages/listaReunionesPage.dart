@@ -19,6 +19,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
   // --- FILTRADO ---
   List<dynamic> _filteredMeetings = [];
   String _selectedFilter = "Todas";
+  String _searchQuery = ""; // Texto de búsqueda
 
   @override
   void initState() {
@@ -82,7 +83,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
     }
   }
 
-  // Aplica el filtro seleccionado 
+  // Aplica el filtro seleccionado + búsqueda
   void _applyFilter() {
     final now = DateTime.now(); // local time
 
@@ -96,37 +97,50 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
       }
     }
 
-    if (_selectedFilter == "Todas") {
-      _filteredMeetings = List.from(_meetings);
-    }
+    // Primer filtro: por categoría (Todas/Próximas/En curso)
+    List<dynamic> tempFiltered;
 
+    if (_selectedFilter == "Todas") {
+      tempFiltered = List.from(_meetings);
+    }
     // ===================== PRÓXIMAS =====================
     else if (_selectedFilter == "Próximas") {
       final limit = now.add(const Duration(days: 7));
 
-      _filteredMeetings = _meetings.where((m) {
+      tempFiltered = _meetings.where((m) {
         final start = parse(m["start_time"]);
         if (start == null) return false;
-
-        // - Reuniones hoy más adelante
-        // - Mañana, pasado, hasta 7 días
         return start.isAfter(now) && start.isBefore(limit);
       }).toList();
     }
-
     // ===================== EN CURSO =====================
     else if (_selectedFilter == "En curso") {
-      _filteredMeetings = _meetings.where((m) {
+      tempFiltered = _meetings.where((m) {
         final start = parse(m["start_time"]);
         final end = parse(m["end_time"]); 
-
         if (start == null || end == null) return false;
-
-        // now ∈ [start, end)
         return now.isAfter(start) && now.isBefore(end);
+      }).toList();
+    } else {
+      tempFiltered = List.from(_meetings);
+    }
+
+    // Segundo filtro: por texto de búsqueda
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      tempFiltered = tempFiltered.where((m) {
+        final title = (m['title'] ?? '').toString().toLowerCase();
+        final description = (m['description'] ?? '').toString().toLowerCase();
+        final topics = (m['topics'] ?? '').toString().toLowerCase();
+        
+        // Busca en título, descripción o tópicos
+        return title.contains(query) || 
+               description.contains(query) || 
+               topics.contains(query);
       }).toList();
     }
 
+    _filteredMeetings = tempFiltered;
     setState(() {});
   }
 
@@ -166,7 +180,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
         centerTitle: true,
       ),
 
-      // --- CONTENIDO PRINCIPAL ---
+      // === CONTENIDO PRINCIPAL ===
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadMeetings,
@@ -176,25 +190,65 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  // --- BUSCADOR ---
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Buscar reuniones...',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: Colors.grey[300],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      // Aquí podrías implementar búsqueda local
+
+                  // === BUSCADOR ===
+                  Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<String>.empty();
+                      }
+                      
+                      // Obtener títulos únicos 
+                      final query = textEditingValue.text.toLowerCase();
+                      return _meetings
+                          .map((m) => m['title']?.toString() ?? '')
+                          .where((title) => title.toLowerCase().contains(query))
+                          .toSet(); // Elimina duplicados
+                    },
+                    onSelected: (String selection) {
+                      setState(() {
+                        _searchQuery = selection;
+                        _applyFilter();
+                      });
+                    },
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar reuniones...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: controller.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    controller.clear();
+                                    setState(() {
+                                      _searchQuery = "";
+                                      _applyFilter();
+                                    });
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.grey[300],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                            _applyFilter();
+                          });
+                        },
+                      );
                     },
                   ),
                   const SizedBox(height: 10),
 
-                  // --- BOTONES DE FILTRO ---
+                  // === BOTONES DE FILTRO ===
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -243,7 +297,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                       ),
                     ),
 
-                  // --- LISTA DE REUNIONES ---
+                  // === LISTA DE REUNIONES ===
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
