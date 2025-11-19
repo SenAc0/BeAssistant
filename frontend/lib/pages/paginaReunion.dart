@@ -133,6 +133,18 @@ class _PaginaReunionState extends State<PaginaReunion> {
     if (_loading) {
       return Scaffold(
         appBar: AppBar(
+          flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
           title: const Text('Cargando...'),
         ),
         body: Center(child: CircularProgressIndicator()),
@@ -142,6 +154,7 @@ class _PaginaReunionState extends State<PaginaReunion> {
     if (_error != null) {
       return Scaffold(
         appBar: AppBar(
+          
           title: Text('Error'),
         ),
         body: Center(child: Text('Error: $_error')),
@@ -150,6 +163,18 @@ class _PaginaReunionState extends State<PaginaReunion> {
 
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: Text(
           _reunion?['title'] ?? 'Reunión',
         ),
@@ -293,6 +318,13 @@ class SesionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color: Colors.grey[300], 
         borderRadius: BorderRadius.circular(8),//16
       ),
@@ -400,6 +432,13 @@ class TopicoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color: Colors.grey[300], 
         borderRadius: BorderRadius.circular(8),//16
       ),
@@ -446,6 +485,13 @@ class DescripcionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color: Colors.grey[300], 
         borderRadius: BorderRadius.circular(8),
       ),
@@ -487,6 +533,13 @@ class NotaCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color:  Colors.grey[300],
         borderRadius: BorderRadius.circular(8),//16
       ),
@@ -562,6 +615,13 @@ class AsistenciaCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color: cardColor,
         borderRadius: BorderRadius.circular(8),//16
       ),
@@ -660,6 +720,13 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
         color: background,
         borderRadius: BorderRadius.circular(12),
       ),

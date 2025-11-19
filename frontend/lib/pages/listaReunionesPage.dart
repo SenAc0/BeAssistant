@@ -175,6 +175,18 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text("Reuniones"),
         centerTitle: true,
       ),
@@ -322,7 +334,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/crearReunion1');
         },
-        //backgroundColor: Colors.blueAccent,
+        elevation: 6, 
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),
@@ -352,6 +364,7 @@ class FilterButton extends StatelessWidget {
         ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
+            shadowColor: Colors.black,
             backgroundColor: active ? Color(0xFFAF79F2) : Colors.grey[300],
             foregroundColor: active ? Colors.white : Colors.black,
             elevation: active ? 1 : 0,
@@ -393,6 +406,8 @@ class ReunionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 6, 
+      shadowColor: Color(0xFFAF79F2), 
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(

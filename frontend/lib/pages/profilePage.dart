@@ -29,6 +29,18 @@ class _PerfilPageState extends State<PerfilPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text("Perfil"),
         centerTitle: true,
       ),
@@ -76,6 +88,13 @@ class _PerfilPageState extends State<PerfilPage> {
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Text(
         text,

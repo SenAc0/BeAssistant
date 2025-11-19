@@ -283,7 +283,21 @@ class _BeaconDetectorState extends State<BeaconDetector> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Detector de Beacon")),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
+        title: const Text("Detector de Beacon")
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

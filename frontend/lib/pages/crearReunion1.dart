@@ -21,6 +21,18 @@ class _CrearReunion1State extends State<CrearReunion1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text('Crear Reunión'),
         automaticallyImplyLeading: false,
         centerTitle: true,
@@ -40,15 +52,28 @@ class _CrearReunion1State extends State<CrearReunion1> {
                 style: TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 6),
-              TextField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  hintText: 'Reunión Semanal',
-                  filled: true,
-                  fillColor: Colors.grey[300],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4), // hacia abajo
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: nombreController,
+                  decoration: InputDecoration(
+                    hintText: 'Reunión Semanal',
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -58,16 +83,29 @@ class _CrearReunion1State extends State<CrearReunion1> {
               // --- Duración ---
               const Text('Duración (minutos)', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 6),
-              TextField(
-                controller: duracionController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: '45',
-                  filled: true,
-                  fillColor: Colors.grey[300],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4), // hacia abajo
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: duracionController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '45',
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -77,15 +115,28 @@ class _CrearReunion1State extends State<CrearReunion1> {
               // --- Tópico ---
               const Text('Tópico', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 6),
-              TextField(
-                controller: topicoController,
-                decoration: InputDecoration(
-                  hintText: 'Proyecto informático',
-                  filled: true,
-                  fillColor: Colors.grey[300],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4), // hacia abajo
+                    ),
+                  ],
+                ),
+                child:TextField(
+                  controller: topicoController,
+                  decoration: InputDecoration(
+                    hintText: 'Proyecto informático',
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -95,15 +146,28 @@ class _CrearReunion1State extends State<CrearReunion1> {
               // --- Descripción ---
               const Text('Descripción', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 6),
-              TextField(
-                controller: descripcionController,
-                decoration: InputDecoration(
-                  hintText: 'En la sesión del viernes hablaremos sobre...',
-                  filled: true,
-                  fillColor: Colors.grey[300],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4), // hacia abajo
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: descripcionController,
+                  decoration: InputDecoration(
+                    hintText: 'En la sesión del viernes hablaremos sobre...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent,
                   ),
                 ),
               ),
@@ -113,18 +177,32 @@ class _CrearReunion1State extends State<CrearReunion1> {
               // --- Nota ---
               const Text('Nota', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 6),
-              TextField(
-                controller: notaController,
-                decoration: InputDecoration(
-                  hintText: 'Recuerden llevar sus computadores',
-                  filled: true,
-                  fillColor: Colors.grey[300],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4), // hacia abajo
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: notaController,
+                  decoration: InputDecoration(
+                    hintText: 'Recuerden llevar sus computadores',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent, // IMPORTANTE: deja que el Container dé el color
                   ),
                 ),
               ),
+
 
               const SizedBox(height: 20),
 
@@ -136,6 +214,8 @@ class _CrearReunion1State extends State<CrearReunion1> {
                       width: 200,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                          elevation: 6, 
+                          shadowColor: Colors.black,   
                           backgroundColor: const Color(0xFFAF79F2),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -176,12 +256,15 @@ class _CrearReunion1State extends State<CrearReunion1> {
                       width: 200,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                          elevation: 6, 
+                          shadowColor: Color.fromARGB(255, 180, 15, 15), 
                           backgroundColor: const Color(0xFFFF0967),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          
                         ),
                         onPressed: () => volverAlInicio(context),
                         child: const Text(

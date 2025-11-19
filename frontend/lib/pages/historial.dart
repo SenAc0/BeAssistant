@@ -82,6 +82,18 @@ class _HistorialState extends State<Historial> {
     return Scaffold(
       //backgroundColor: Colors.white,
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text('Historial'),
         centerTitle: true,
         elevation: 0,
@@ -167,6 +179,8 @@ class ListaCard extends StatelessWidget {
     final bool pendiente = asistencia.toLowerCase() == "pendiente";
 
     return Card(
+      elevation: 6, 
+      shadowColor: Color(0xFFAF79F2), 
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(

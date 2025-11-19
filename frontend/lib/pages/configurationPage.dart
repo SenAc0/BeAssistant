@@ -16,6 +16,18 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text("Configuración"),
         centerTitle: true,
       ),
@@ -62,6 +74,13 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: ListTile(
                   leading: const Icon(Icons.notifications, color: Colors.black),
@@ -127,6 +146,13 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: ListTile(
         leading: Icon(icon, color: Colors.black),

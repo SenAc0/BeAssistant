@@ -81,6 +81,18 @@ class _CrearReunion2State extends State<CrearReunion2> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
         title: const Text('Crear Reunión'),
       ),
       body: futureCrear == null
@@ -120,6 +132,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
             ElevatedButton(
               onPressed: seleccionarFecha,
               style: ElevatedButton.styleFrom(
+                elevation: 6, 
+                shadowColor: Colors.black,
                 backgroundColor: Colors.grey[300],
               ),
               child: Row(
@@ -146,6 +160,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
               onPressed: seleccionarHora,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[300],
+                elevation: 6, 
+                shadowColor: Colors.black, 
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -214,6 +230,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
     return GestureDetector(
       onTap: () => setState(() => beaconSeleccionado = id),
       child: Card(
+        elevation: 6, 
+        shadowColor: Color(0xFFAF79F2),
         color: seleccionado ? Color(0xFFA2CF68) : Colors.white,
         margin: const EdgeInsets.only(bottom: 10),
         child: ListTile(
@@ -237,6 +255,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
             width: 200,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
+                elevation: 6, 
+                shadowColor: Colors.black,
                 backgroundColor: Color(0xFFAF79F2),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -268,6 +288,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
             width: 200,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
+                elevation: 6, 
+                shadowColor: Color.fromARGB(255, 180, 15, 15),
                 backgroundColor: Color(0xFFFF0967),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
