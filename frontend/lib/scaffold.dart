@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/pages/configurationPage.dart';
 import 'package:myapp/pages/historial.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
-import 'package:myapp/pages/noHecho.dart';
+//import 'package:myapp/pages/noHecho.dart';
 import 'package:myapp/pages/beacon_service.dart';
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -43,7 +43,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: Color(0xFFAF79F2), 
         unselectedItemColor: Colors.black54,
         type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,

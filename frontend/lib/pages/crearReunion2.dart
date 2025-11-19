@@ -80,12 +80,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Crear Reunión'),
-        centerTitle: true,
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
       ),
       body: futureCrear == null
           ? _formulario()
@@ -97,14 +93,14 @@ class _CrearReunion2State extends State<CrearReunion2> {
           }
 
           if (snapshot.hasError) {
-            return _mensajeResultado("Error al crear la reunión", Colors.red);
+            return _mensajeResultado("Error al crear la reunión", Color(0xFFFF0967));
           }
 
           if (snapshot.data == true) {
-            return _mensajeResultado("Reunión creada con éxito", Colors.green);
+            return _mensajeResultado("Reunión creada con éxito", Color(0xFF5BD107));
           }
 
-          return _mensajeResultado("No se pudo crear la reunión", Colors.red);
+          return _mensajeResultado("No se pudo crear la reunión", Color(0xFFFF0967));
         },
       ),
     );
@@ -218,7 +214,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
     return GestureDetector(
       onTap: () => setState(() => beaconSeleccionado = id),
       child: Card(
-        color: seleccionado ? Colors.green[300] : Colors.white,
+        color: seleccionado ? Color(0xFFA2CF68) : Colors.white,
         margin: const EdgeInsets.only(bottom: 10),
         child: ListTile(
           title: Text(
@@ -241,7 +237,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
             width: 200,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Color(0xFFAF79F2),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -272,7 +268,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
             width: 200,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Color(0xFFFF0967),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),

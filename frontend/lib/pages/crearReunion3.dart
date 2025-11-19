@@ -18,13 +18,8 @@ class _CrearReunion3State extends State<CrearReunion3> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Asistentes'),
-        automaticallyImplyLeading: true,
-        centerTitle: true,
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
       ),
 
       //  CARGA USUARIOS + ASISTENTES YA AGREGADOS
@@ -152,7 +147,7 @@ class BotonesReunion3 extends StatelessWidget {
           width: 200,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 56, 140, 208),
+              backgroundColor: Color(0xFFAF79F2),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -168,7 +163,7 @@ class BotonesReunion3 extends StatelessWidget {
           width: 200,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 172, 48, 48),
+              backgroundColor: const Color(0xFFFF0967),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -221,7 +216,7 @@ class _AgregarAsistenteCardState extends State<AgregarAsistenteCard> {
   Widget build(BuildContext context) {
     return Card(
       color: _seleccionado
-          ? const Color.fromARGB(255, 87, 177, 60)
+          ? const Color(0xFFA2CF68)
           : Colors.white,
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -13,9 +13,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.grey[300],
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text("Configuración"),
@@ -76,7 +74,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                         notificacionesActivadas = value;
                       });
                     },
-                    activeColor: Colors.purple,
+                    activeColor: Color(0xFFAF79F2) ,
                   ),
                 ),
               ),
@@ -99,7 +97,7 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[700],
+                    backgroundColor: const Color(0xFFFF0967),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 40,

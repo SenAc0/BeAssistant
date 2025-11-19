@@ -132,24 +132,29 @@ class _PaginaReunionState extends State<PaginaReunion> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Cargando...')),
+        appBar: AppBar(
+          title: const Text('Cargando...'),
+        ),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Error')),
+        appBar: AppBar(
+          title: Text('Error'),
+        ),
         body: Center(child: Text('Error: $_error')),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_reunion?['title'] ?? 'Reunión'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
+        title: Text(
+          _reunion?['title'] ?? 'Reunión',
+        ),
       ),
+
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12.0),
@@ -157,21 +162,6 @@ class _PaginaReunionState extends State<PaginaReunion> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-               // BOTÓN SOLO PARA COORDINADOR
-            if (_isCoordinator)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          CrearReunion3(meetingId: widget.meetingID),
-                    ),
-                  );
-                },
-                child: const Text("Asistentes"),
-              ),
-
 
             SesionCard(
               tituloSesion: _reunion?['title'] ?? 'Sin título',
@@ -180,14 +170,20 @@ class _PaginaReunionState extends State<PaginaReunion> {
               coordinador:
                   _reunion?['coordinator']?['name'] ?? 'Sin coordinador',
               sala: _reunion?['location'] ?? 'Sin sala',
+              startTime: _reunion?['start_time'],
+              endTime: _reunion?['end_time'],
             ),
             const SizedBox(height: 12),
 
             if (_reunion?['topics'] != null && _reunion!['topics'].isNotEmpty)
               TopicoCard(
                 titulo: _reunion?['topics'] ?? 'Sin título',
-                descripcion: _reunion?['description'] ?? 'Sin tópicos',
               ),
+            const SizedBox(height: 12),
+
+            // Descripción como card independiente (si existe)
+            if (_reunion?['description'] != null && _reunion!['description'].isNotEmpty)
+              DescripcionCard(descripcion: _reunion?['description'] ?? ''),
 
             const SizedBox(height: 12),
 
@@ -204,7 +200,26 @@ class _PaginaReunionState extends State<PaginaReunion> {
           ],
         ),
       ),
+    
+      //Boton coordinador
+      floatingActionButton: _isCoordinator
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          CrearReunion3(meetingId: widget.meetingID),
+                    ),
+                );
+              },
+              //backgroundColor: Color(0xFFA159FF),
+              shape: const CircleBorder(),
+              child: const Icon(Icons.person_add),
+            )
+          : null,
     );
+    
   }
 
   String _formatDate(String? iso) {
@@ -250,6 +265,8 @@ class SesionCard extends StatelessWidget {
   final String hora;
   final String coordinador;
   final String sala;
+  final String? startTime;
+  final String? endTime;
 
   const SesionCard({
     super.key,
@@ -258,89 +275,112 @@ class SesionCard extends StatelessWidget {
     required this.hora,
     required this.coordinador,
     required this.sala,
+    this.startTime,
+    this.endTime,
   });
 
   @override
   Widget build(BuildContext context) {
+    int duracionMin = 0;
+    if (startTime != null && endTime != null) {
+      try {
+        final start = DateTime.parse(startTime!);
+        final end = DateTime.parse(endTime!);
+        duracionMin = end.difference(start).inMinutes;
+      } catch (_) {}
+    }
+
     return Container(
-      height: 200,
-      width: double.infinity,
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 60, 157, 237),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey[300], 
+        borderRadius: BorderRadius.circular(8),//16
       ),
-      child: ListTile(
-        title: Text(
-          'Sesión: $tituloSesion',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // TÍTULO
+          Text(
+            "Sesión: $tituloSesion",
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
 
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Text('$fecha - $hora', style: const TextStyle(color: Colors.white)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  'Coordinador ',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    coordinador,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Text('Sala ', style: const TextStyle(color: Colors.white)),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          // LÍNEA DIVISORIA
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.black,
+          ),
+          const SizedBox(height: 10),
 
-                  child: Text(
-                    sala,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
+          // FECHA / HORA / DURACIÓN
+          Row(
+            children: [
+              // FECHA
+              Expanded(
+              child: Text(
+                  "Fecha: $fecha",
+                  style: const TextStyle(fontSize: 14),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+
+              // ESPACIADOR
+              const SizedBox(width: 4),
+
+              // INICIO + DURACIÓN
+              Expanded(
+                child: Text(
+                  "Inicio: $hora ($duracionMin min)",
+                  style: const TextStyle(fontSize: 14),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+          
+
+          const SizedBox(height: 20),
+
+          // COORDINADOR
+          Row(
+            children: [
+              const Text(
+                "Coordinador:",
+                style: TextStyle(fontSize: 14),
+              ),
+              const Spacer(),
+              _Pill(
+                texto: coordinador,
+                background: Colors.white.withOpacity(0.25),
+                textColor: Colors.black,
+              ),
+            ],
+          ),
+
+          //const SizedBox(height: 12),
+          //Divider(color: Colors.black),
+          const SizedBox(height: 12),
+
+          // SALA
+          Row(
+            children: [
+              const Text(
+                "Sala:",
+                style: TextStyle(fontSize: 14),
+              ),
+              const Spacer(),
+              _Pill(
+                texto: sala,
+                background: Colors.white.withOpacity(0.25),
+                textColor: Colors.black,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -348,58 +388,87 @@ class SesionCard extends StatelessWidget {
 
 class TopicoCard extends StatelessWidget {
   final String titulo;
-  final String descripcion;
+
   const TopicoCard({
     super.key,
     required this.titulo,
-    required this.descripcion,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 150,
       width: double.infinity,
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(251, 223, 223, 90),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey[300], 
+        borderRadius: BorderRadius.circular(8),//16
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
           Text(
-            'Topico: $titulo',
+            "Tópico",
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
           ),
 
+          // LÍNEA DIVISORIA
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.black,
+          ),
           const SizedBox(height: 10),
 
-          RichText(
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: 'Descripción: ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                TextSpan(
-                  text: descripcion,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.normal,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+          Text(
+            titulo,
+            style: const TextStyle(fontSize: 16),
+          ),
+
+        ],
+      ),
+    );
+  }
+}
+
+// Nueva card para la descripción (se muestra por separado)
+class DescripcionCard extends StatelessWidget {
+  final String descripcion;
+
+  const DescripcionCard({super.key, required this.descripcion});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[300], 
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Descripción",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          // LÍNEA DIVISORIA
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.black,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            descripcion,
+            style: const TextStyle(fontSize: 15),
           ),
         ],
       ),
@@ -415,45 +484,50 @@ class NotaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 130,
       width: double.infinity,
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(228, 236, 157, 94),
-        borderRadius: BorderRadius.circular(12),
+        color:  Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),//16
       ),
-      child: ListTile(
-        title: const Text(
-          'Nota',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Nota",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        subtitle: Text(
-          descripcionNota,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.normal,
-            color: Colors.white,
+          // LÍNEA DIVISORIA
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.black,
           ),
-        ),
+          const SizedBox(height: 10),
+
+          Text(
+            descripcionNota,
+            style: const TextStyle(fontSize: 15),
+          ),
+        ],
       ),
     );
   }
 }
 
 class AsistenciaCard extends StatelessWidget {
-  final String statusCode; // 'present' | 'absent' | 'late' 'not_recorded' | 'error' | 'unknown'
+  final String statusCode;
   final bool isChecking;
   final VoidCallback onCheckAttendance;
 
   const AsistenciaCard({
     super.key,
     required this.statusCode,
-    this.isChecking = false,
     required this.onCheckAttendance,
+    this.isChecking = false,
   });
 
   @override
@@ -463,93 +537,135 @@ class AsistenciaCard extends StatelessWidget {
     String statusText;
 
     if (isChecking) {
-      cardColor = Colors.orange;
+      cardColor = const Color(0xFFFFC75F);
       iconData = Icons.refresh;
       statusText = "Verificando asistencia...";
     } else if (statusCode == "present") {
-      cardColor = const Color.fromARGB(255, 61, 200, 72);
-      iconData = Icons.check;
-      statusText = "Tu asistencia ha sido registrada";
-    } else if (statusCode == 'late') {
-      cardColor = Colors.orange;
+      cardColor = const Color(0xFFA2CF68);
+      iconData = Icons.check_circle;
+      statusText = "Asistencia registrada";
+    } else if (statusCode == "late") {
+      cardColor = const Color(0xFFFFC878);
       iconData = Icons.access_time;
-      statusText = "Has llegado tarde";
+      statusText = "Llegaste tarde";
     } else if (statusCode == "error") {
-      cardColor = Colors.grey;
+      cardColor = const Color(0xFFB0BEC5);
       iconData = Icons.error;
-      statusText = "Error al verificar asistencia";
+      statusText = "Error al registrar";
     } else {
-      // absent, not_recorded, unknown
-      cardColor = Colors.red;
+      cardColor = const Color(0xFFFF0967);
       iconData = Icons.close;
       statusText = "No se ha registrado tu asistencia";
     }
 
     return Container(
-      height: 120,
       width: double.infinity,
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),//16
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
+          // 🔹 TÍTULO SUPERIOR
           const Text(
             "Asistencia",
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 10),
 
+          const SizedBox(height: 8),
+
+          // LÍNEA DIVISORIA
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.white,
+          ),
+
+          const SizedBox(height: 12),
+
+          // 🔹 FILA PRINCIPAL: texto - icon - botón
           Row(
             children: [
+              // Texto del estado
               Expanded(
                 child: Text(
                   statusText,
                   style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Colors.white,
-                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ),
 
-              const SizedBox(width: 10),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.3),
+              // Ícono del estado
+              Icon(iconData, size: 32, color: Colors.white),
+
+              const SizedBox(width: 12),
+
+              // Botón circular (refresh)
+              GestureDetector(
+                onTap: isChecking ? null : onCheckAttendance,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(width: 2, color: Colors.white),
+                  ),
+                  child: Center(
+                    child: isChecking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.refresh, color: Colors.white),
+                  ),
                 ),
-                child: Icon(iconData, color: Colors.white),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: isChecking ? null : onCheckAttendance,
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                ),
-                child: isChecking
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.refresh, color: Colors.white),
-              ),
+              )
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+
+class _Pill extends StatelessWidget {
+  final String texto;
+  final Color background;
+  final Color textColor;
+
+  const _Pill({
+    required this.texto,
+    required this.background,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        texto,
+        style: TextStyle(fontSize: 14, color: textColor),
       ),
     );
   }

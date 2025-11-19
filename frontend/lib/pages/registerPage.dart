@@ -210,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF38D0B3),
+                      backgroundColor: const Color(0xFFAF79F2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -238,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: const Text(
                         'Iniciar sesión',
                         style: TextStyle(
-                          color: Colors.green,
+                          color: Color(0xFFA2CF68),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

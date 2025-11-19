@@ -6,7 +6,7 @@ import 'package:myapp/pages/profilePage.dart';
 import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/scaffold.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:flutter/widgets.dart';
+//import 'package:flutter/widgets.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,9 +23,31 @@ class MyApp extends StatelessWidget {
       title: 'Reuniones',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFFE5E5E5),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFA159FF), 
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFA159FF),
+          elevation: 0,
+          //foregroundColor: Color(0xFF1A1A1A),
+          foregroundColor:Color(0xFFF6F7FB),
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            //color: Color(0xFF1A1A1A), 
+            color: Color(0xFFF6F7FB),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          ),
+        ),
       ),
+
 
       // Ruta inicial → pantalla de login
       initialRoute: '/login',

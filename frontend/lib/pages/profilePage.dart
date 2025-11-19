@@ -27,12 +27,9 @@ class _PerfilPageState extends State<PerfilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: true,
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-        title: const Text("Perfil", style: TextStyle(fontSize: 24)),
+        title: const Text("Perfil"),
         centerTitle: true,
       ),
 

@@ -80,7 +80,7 @@ class _HistorialState extends State<Historial> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      //backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Historial'),
         centerTitle: true,
@@ -180,7 +180,7 @@ class ListaCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: pendiente
                     ? Colors.grey
-                    : (estaPresente ? Colors.green : Colors.red),
+                    : (estaPresente ? Color(0xFFA2CF68) : Color(0xFFFF0967)),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -220,7 +220,7 @@ class ListaCard extends StatelessWidget {
               style: TextStyle(
                 color: pendiente
                     ? Colors.grey
-                    : (estaPresente ? Colors.green : Colors.red),
+                    : (estaPresente ? Color(0xFFA2CF68) : Color(0xFFFF0967)),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),

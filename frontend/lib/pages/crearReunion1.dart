@@ -20,12 +20,10 @@ class _CrearReunion1State extends State<CrearReunion1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Crear Reunion'),
+        title: const Text('Crear Reunión'),
         automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: Colors.grey[300],
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -138,12 +136,7 @@ class _CrearReunion1State extends State<CrearReunion1> {
                       width: 200,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            56,
-                            140,
-                            208,
-                          ),
+                          backgroundColor: const Color(0xFFAF79F2),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -183,12 +176,7 @@ class _CrearReunion1State extends State<CrearReunion1> {
                       width: 200,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            172,
-                            48,
-                            48,
-                          ),
+                          backgroundColor: const Color(0xFFFF0967),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(

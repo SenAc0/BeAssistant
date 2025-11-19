@@ -171,9 +171,8 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      //backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.grey[300],
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text("Reuniones"),
@@ -293,7 +292,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12.0),
                       child: Text(
                         _error!,
-                        style: const TextStyle(color: Colors.red),
+                        style: const TextStyle(color: Color(0xFFFF0967)),
                       ),
                     ),
 
@@ -323,7 +322,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/crearReunion1');
         },
-        backgroundColor: Colors.blueAccent,
+        //backgroundColor: Colors.blueAccent,
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),
@@ -353,7 +352,7 @@ class FilterButton extends StatelessWidget {
         ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
-            backgroundColor: active ? Colors.blue : Colors.grey[300],
+            backgroundColor: active ? Color(0xFFAF79F2) : Colors.grey[300],
             foregroundColor: active ? Colors.white : Colors.black,
             elevation: active ? 1 : 0,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -371,7 +370,7 @@ class FilterButton extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: Color(0xFFA2CF68),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
