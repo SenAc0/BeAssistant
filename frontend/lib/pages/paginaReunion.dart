@@ -182,7 +182,8 @@ class _PaginaReunionState extends State<PaginaReunion> {
 
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
