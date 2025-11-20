@@ -40,7 +40,8 @@ class _CrearReunion1State extends State<CrearReunion1> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

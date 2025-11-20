@@ -185,7 +185,7 @@ class _HistorialState extends State<Historial> {
       body: cargando
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: ListView(
                 children: [
                   // Esta semana
@@ -304,7 +304,8 @@ class ListaCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

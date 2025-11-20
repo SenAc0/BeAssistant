@@ -122,7 +122,8 @@ class _CrearReunion2State extends State<CrearReunion2> {
   Widget _formulario() {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
