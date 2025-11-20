@@ -2,22 +2,15 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   // Setear la url para conectar con el backend
+  
+  static final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://192.168.0.178:8000';
 
-  // En caso de usar un emulador de Android, usar esta dirección IP para localhost
-  //static const String baseUrl = 'http://10.0.2.2:8000';
 
-  // En caso de usar ngrok, insertar la url ngrok y usar esto
-  //static const String baseUrl = 'https://7c599f4c595a.ngrok-free.app';
 
-  // Para ejecutar en Linux/Desktop (mismo equipo que el backend Docker)
-  static const String baseUrl = 'http://localhost:8000';
 
-  // En caso de usar telefono fisico como dispositivo en development, usar la IP local de la pc (misma red wifi)
-  // Nota: IP actual de esta máquina es 192.168.1.129
-  //static const String baseUrl = 'http://192.168.18.207:8000';
 
   Future<bool> register(String name, String email, String password) async {
     final url = Uri.parse('$baseUrl/register');

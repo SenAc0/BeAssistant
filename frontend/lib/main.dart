@@ -6,10 +6,18 @@ import 'package:myapp/pages/profilePage.dart';
 import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/scaffold.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 //import 'package:flutter/widgets.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Fail-fast: load the .env in the Flutter project root ('.env').
+  // When running the app, the current project root is the Flutter package
+  // (the `frontend` folder). Using 'frontend/.env' caused the loader to
+  // look for 'frontend/frontend/.env' and fail. Load '.env' instead.
+  await dotenv.load(fileName: '.env');
+  print('BASE_URL: ${dotenv.env['BASE_URL']}');
   tzdata.initializeTimeZones();
   runApp(const MyApp());
 }
