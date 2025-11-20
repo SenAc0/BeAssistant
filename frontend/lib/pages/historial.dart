@@ -10,6 +10,7 @@ class Historial extends StatefulWidget {
 class _HistorialState extends State<Historial> {
   List<dynamic> reunionesSemana = [];
   List<dynamic> reunionesMesPasado = [];
+  List<dynamic> reunionesAntiguas = [];
   bool cargando = true;
 
   @override
@@ -19,19 +20,62 @@ class _HistorialState extends State<Historial> {
   }
 
   Future<void> cargarHistorial() async {
-    final allMeetings = await ApiService().getMeetings();
+    final allMeetings = await ApiService().getMyMeetings();
 
     if (allMeetings == null) {
       setState(() => cargando = false);
       return;
     }
 
-    final semana = filtrarEstaSemana(allMeetings);
-    final mesPasado = filtrarMesPasado(allMeetings);
+    // Consider only meetings that already finished (end_time < now).
+    // If end_time is missing, fall back to start_time.
+    final now = DateTime.now();
+    final past = <dynamic>[];
+    for (final m in allMeetings) {
+      final endStr = m['end_time'] ?? m['start_time'];
+      if (endStr == null) continue;
+      final endDt = DateTime.tryParse(endStr.toString());
+      if (endDt == null) continue;
+      if (endDt.toLocal().isBefore(now)) {
+        past.add(m);
+      }
+    }
+
+    // Group by how long ago the meeting ended (based on end_time fallback)
+    final semana = past.where((m) {
+      final endStr = m['end_time'] ?? m['start_time'];
+      final fecha = DateTime.parse(endStr).toLocal();
+      return fecha.isAfter(now.subtract(const Duration(days: 7)));
+    }).toList();
+
+    final mes = past.where((m) {
+      final endStr = m['end_time'] ?? m['start_time'];
+      final fecha = DateTime.parse(endStr).toLocal();
+      final within30 = fecha.isAfter(now.subtract(const Duration(days: 30)));
+      return within30 && fecha.isBefore(now.subtract(const Duration(days: 7)));
+    }).toList();
+
+    final antiguas = past.where((m) {
+      final endStr = m['end_time'] ?? m['start_time'];
+      final fecha = DateTime.parse(endStr).toLocal();
+      return fecha.isBefore(now.subtract(const Duration(days: 30)));
+    }).toList();
+
+    // Sort each list by start_time descending (most recent first)
+    int cmpByStartDesc(a, b) {
+      final da = DateTime.tryParse(a['start_time'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final db_ = DateTime.tryParse(b['start_time'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return db_.compareTo(da);
+    }
+
+    semana.sort(cmpByStartDesc);
+    mes.sort(cmpByStartDesc);
+    antiguas.sort(cmpByStartDesc);
 
     setState(() {
       reunionesSemana = semana;
-      reunionesMesPasado = mesPasado;
+      reunionesMesPasado = mes;
+      reunionesAntiguas = antiguas;
       cargando = false;
     });
   }
@@ -104,54 +148,90 @@ class _HistorialState extends State<Historial> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: ListView(
                 children: [
-                  Text("Esta semana",
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  // Esta semana
+                  if (reunionesSemana.isNotEmpty) ...[
+                    Text("Esta semana",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    ...reunionesSemana.map((m) {
+                      final inicio = DateTime.parse(m['start_time']).toLocal();
+                      final fin = m['end_time'] != null
+                          ? DateTime.parse(m['end_time']).toLocal()
+                          : null;
 
-                  ...reunionesSemana.map((m) {
-                    final inicio = DateTime.parse(m['start_time']).toLocal();
-                    final fin = m['end_time'] != null
-                        ? DateTime.parse(m['end_time']).toLocal()
-                        : null;
+                      final asistencia = "Presente"; // past meetings shown as completed
 
-                    final bool esFuturo = inicio.isAfter(DateTime.now());
-                    final asistencia = esFuturo ? "Pendiente" : "Presente";
+                      return ListaCard(
+                        nombre: m["title"] ?? "Reunión sin título",
+                        fecha: formatearFechaTexto(inicio),
+                        hora:
+                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                        asistencia: asistencia,
+                      );
+                    }),
+                    const SizedBox(height: 20),
+                  ],
 
-                    return ListaCard(
-                      nombre: m["title"] ?? "Reunión sin título",
-                      fecha: formatearFechaTexto(inicio),
-                      hora:
-                          "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
-                          "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
-                      asistencia: asistencia,
-                    );
-                  }),
+                  // Mes pasado (7-30 días)
+                  if (reunionesMesPasado.isNotEmpty) ...[
+                    Text("Mes pasado",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    ...reunionesMesPasado.map((m) {
+                      final inicio = DateTime.parse(m['start_time']).toLocal();
+                      final fin = m['end_time'] != null
+                          ? DateTime.parse(m['end_time']).toLocal()
+                          : null;
 
-                  const SizedBox(height: 20),
-                  Text("Mes pasado",
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                      final asistencia = "Presente";
 
-                  ...reunionesMesPasado.map((m) {
-                    final inicio = DateTime.parse(m['start_time']).toLocal();
-                    final fin = m['end_time'] != null
-                        ? DateTime.parse(m['end_time']).toLocal()
-                        : null;
+                      return ListaCard(
+                        nombre: m["title"] ?? "Reunión sin título",
+                        fecha: formatearFechaTexto(inicio),
+                        hora:
+                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                        asistencia: asistencia,
+                      );
+                    }),
+                    const SizedBox(height: 20),
+                  ],
 
-                    final bool esFuturo = inicio.isAfter(DateTime.now());
-                    final asistencia = esFuturo ? "Pendiente" : "Ausente";
+                  // Antiguas (>30 días)
+                  if (reunionesAntiguas.isNotEmpty) ...[
+                    Text("Antiguas",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    ...reunionesAntiguas.map((m) {
+                      final inicio = DateTime.parse(m['start_time']).toLocal();
+                      final fin = m['end_time'] != null
+                          ? DateTime.parse(m['end_time']).toLocal()
+                          : null;
 
-                    return ListaCard(
-                      nombre: m["title"] ?? "Reunión sin título",
-                      fecha: formatearFechaTexto(inicio),
-                      hora:
-                          "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
-                          "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
-                      asistencia: asistencia,
-                    );
-                  }),
+                      final asistencia = "Presente";
+
+                      return ListaCard(
+                        nombre: m["title"] ?? "Reunión sin título",
+                        fecha: formatearFechaTexto(inicio),
+                        hora:
+                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                        asistencia: asistencia,
+                      );
+                    }),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Empty state if nothing
+                  if (reunionesSemana.isEmpty && reunionesMesPasado.isEmpty && reunionesAntiguas.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24.0),
+                      child: Center(child: Text('No hay reuniones pasadas.')),
+                    ),
                 ],
               ),
             ),
