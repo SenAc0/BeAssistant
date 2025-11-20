@@ -27,6 +27,27 @@ class _HistorialState extends State<Historial> {
       return;
     }
 
+    // Also fetch user's attendances to mark presence/absence
+    List<dynamic> myAttendances = [];
+    try {
+      myAttendances = await ApiService().getMyAttendances();
+    } catch (_) {
+      // If the request fails, we'll assume no attendances.
+      myAttendances = [];
+    }
+
+    // Build a map meetingId -> status for quick lookup
+    final Map<String, String> attendanceMap = {};
+    for (final a in myAttendances) {
+      try {
+        final mid = a['meeting_id']?.toString();
+        final status = a['status']?.toString();
+        if (mid != null && status != null) attendanceMap[mid] = status;
+      } catch (_) {
+        // ignore malformed entry
+      }
+    }
+
     // Consider only meetings that already finished (end_time < now).
     // If end_time is missing, fall back to start_time.
     final now = DateTime.now();
@@ -71,6 +92,25 @@ class _HistorialState extends State<Historial> {
     semana.sort(cmpByStartDesc);
     mes.sort(cmpByStartDesc);
     antiguas.sort(cmpByStartDesc);
+
+    // Attach attendance status to each meeting object for UI rendering
+    String lookupStatus(dynamic meeting) {
+      final mid = meeting['id']?.toString() ?? meeting['meeting_id']?.toString();
+      if (mid == null) return 'No llegó';
+      final s = attendanceMap[mid];
+      if (s != null && s.toLowerCase() == 'present') return 'Presente';
+      return 'No llegó';
+    }
+
+    for (final m in semana) {
+      m['_asistencia_label'] = lookupStatus(m);
+    }
+    for (final m in mes) {
+      m['_asistencia_label'] = lookupStatus(m);
+    }
+    for (final m in antiguas) {
+      m['_asistencia_label'] = lookupStatus(m);
+    }
 
     setState(() {
       reunionesSemana = semana;
@@ -160,7 +200,7 @@ class _HistorialState extends State<Historial> {
                           ? DateTime.parse(m['end_time']).toLocal()
                           : null;
 
-                      final asistencia = "Presente"; // past meetings shown as completed
+                      final asistencia = m['_asistencia_label'] ?? "Ausente";
 
                       return ListaCard(
                         nombre: m["title"] ?? "Reunión sin título",
@@ -186,7 +226,7 @@ class _HistorialState extends State<Historial> {
                           ? DateTime.parse(m['end_time']).toLocal()
                           : null;
 
-                      final asistencia = "Presente";
+                      final asistencia = m['_asistencia_label'] ?? "No llegó";
 
                       return ListaCard(
                         nombre: m["title"] ?? "Reunión sin título",
@@ -212,7 +252,7 @@ class _HistorialState extends State<Historial> {
                           ? DateTime.parse(m['end_time']).toLocal()
                           : null;
 
-                      final asistencia = "Presente";
+                      final asistencia = m['_asistencia_label'] ?? "No llegó";
 
                       return ListaCard(
                         nombre: m["title"] ?? "Reunión sin título",

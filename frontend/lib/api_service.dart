@@ -329,6 +329,30 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
       throw Exception("Error al obtener lista de beacons");
     }
   }
+  // obtener todas las asistencias del usuario a sus reuniones
+  Future<List<dynamic>> getMyAttendances() async {
+    final token = await getToken();
+    if (token == null) {
+      throw Exception("No autorizado: falta token");
+    }
+
+    final url = Uri.parse('$baseUrl/attendance/my');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error al obtener asistencias: ${response.body}");
+      throw Exception("Error al obtener lista de asistencias");
+    }
+  }
 
 
 }

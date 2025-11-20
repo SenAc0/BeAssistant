@@ -30,7 +30,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
     final fecha = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2023),
       lastDate: DateTime.now().add(const Duration(days: 365 * 6)),
     );
 

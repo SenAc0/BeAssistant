@@ -73,33 +73,37 @@ class _CrearReunion3State extends State<CrearReunion3> {
                 const SizedBox(height: 10),
 
                 // LISTA DE USUARIOS
-                Expanded(
-                  child: ListView(
-                    children: usuarios.map((user) {
-                      final id = user["id"];
-                      final yaSeleccionado = asistentesSeleccionados.contains(
-                        id,
-                      );
-
-                      return AgregarAsistenteCard(
-                        key: Key("user_$id"),
-                        userId: id,
-                        nombre: user["name"],
-                        correo: user["email"],
-                        inicialmenteSeleccionado: yaSeleccionado,
-                        onSelected: (id, selected) {
-                          setState(() {
-                            if (selected) {
-                              if (!asistentesSeleccionados.contains(id)) {
-                                asistentesSeleccionados.add(id);
+                Container(
+                  height: 400,
+                  child: Expanded(
+                    child: ListView(
+                      children: usuarios.map((user) {
+                        final id = user["id"];
+                        final yaSeleccionado = asistentesSeleccionados.contains(
+                          id,
+                        );
+                  
+                        return AgregarAsistenteCard(
+                          key: Key("user_$id"),
+                          userId: id,
+                          nombre: user["name"],
+                          correo: user["email"],
+                          inicialmenteSeleccionado: yaSeleccionado,
+                          onSelected: (id, selected) {
+                            setState(() {
+                              if (selected) {
+                                if (!asistentesSeleccionados.contains(id)) {
+                                  asistentesSeleccionados.add(id);
+                                }
+                              } else {
+                                asistentesSeleccionados.remove(id);
                               }
-                            } else {
-                              asistentesSeleccionados.remove(id);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    
                   ),
                 ),
 
