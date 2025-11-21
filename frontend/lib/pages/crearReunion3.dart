@@ -75,7 +75,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
 
                 // LISTA DE USUARIOS
                 Container(
-                  height: 400,
+                  height: MediaQuery.of(context).size.height * 0.6, // 60% de la pantalla,
                   child: Expanded(
                     child: ListView(
                       children: usuarios.map((user) {
