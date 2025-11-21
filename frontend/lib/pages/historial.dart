@@ -96,10 +96,10 @@ class _HistorialState extends State<Historial> {
     // Attach attendance status to each meeting object for UI rendering
     String lookupStatus(dynamic meeting) {
       final mid = meeting['id']?.toString() ?? meeting['meeting_id']?.toString();
-      if (mid == null) return 'No llegó';
+      if (mid == null) return 'Ausente';
       final s = attendanceMap[mid];
       if (s != null && s.toLowerCase() == 'present') return 'Presente';
-      return 'No llegó';
+      return 'Ausente';
     }
 
     for (final m in semana) {
@@ -226,7 +226,7 @@ class _HistorialState extends State<Historial> {
                           ? DateTime.parse(m['end_time']).toLocal()
                           : null;
 
-                      final asistencia = m['_asistencia_label'] ?? "No llegó";
+                      final asistencia = m['_asistencia_label'] ?? "Ausente";
 
                       return ListaCard(
                         nombre: m["title"] ?? "Reunión sin título",
@@ -252,7 +252,7 @@ class _HistorialState extends State<Historial> {
                           ? DateTime.parse(m['end_time']).toLocal()
                           : null;
 
-                      final asistencia = m['_asistencia_label'] ?? "No llegó";
+                      final asistencia = m['_asistencia_label'] ?? "Ausente";
 
                       return ListaCard(
                         nombre: m["title"] ?? "Reunión sin título",

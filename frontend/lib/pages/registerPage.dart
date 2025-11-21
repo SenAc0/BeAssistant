@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:myapp/pages/loginPage.dart';
 import 'package:myapp/api_service.dart';
 class RegisterScreen extends StatefulWidget {
@@ -16,11 +17,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final ApiService apiService = ApiService();
+  String? _errorMessage;
 
 
   void registerUser() async {
-    String name = _nameController.text;
-    String email = _emailController.text;
+    // Validar campos antes de enviar
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = 'Por favor corrige los errores resaltados';
+      });
+      return;
+    }
+
+    setState(() {
+      _errorMessage = null;
+    });
+
+    String name = _nameController.text.trim();
+    String email = _emailController.text.trim();
     String password = _passwordController.text;
 
     bool success = await apiService.register(name, email, password);
@@ -31,10 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
-      // Mostrar error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al registrar el usuario')),
-      );
+      setState(() {
+        _errorMessage = 'Error al registrar el usuario';
+      });
     }
   }
 
@@ -88,6 +101,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: TextFormField(
                     controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r"[a-zA-ZÀ-ÿ\s]")),
+                      LengthLimitingTextInputFormatter(50),
+                    ],
                     decoration: InputDecoration(
                       labelText: 'Nombre completo',
                       hintText: 'Introduzca su nombre completo',
@@ -124,6 +143,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: TextFormField(
                     controller: _emailController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r"\s")),
+                      LengthLimitingTextInputFormatter(100),
+                    ],
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Correo electrónico',
@@ -166,6 +189,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: TextFormField(
                     controller: _passwordController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r"\s")),
+                      LengthLimitingTextInputFormatter(64),
+                    ],
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       labelText: 'Contraseña',
@@ -218,6 +245,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: TextFormField(
                     controller: _confirmPasswordController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r"\s")),
+                      LengthLimitingTextInputFormatter(64),
+                    ],
                     obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
                       labelText: 'Confirmar contraseña',
@@ -278,6 +309,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Mensaje de error (si existe)
+                if (_errorMessage != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Enlace a inicio de sesión
                 Row(

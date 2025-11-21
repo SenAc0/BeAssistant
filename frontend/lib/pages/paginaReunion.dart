@@ -605,7 +605,7 @@ class AsistenciaCard extends StatelessWidget {
     } else if (statusCode == "error") {
       cardColor = const Color(0xFFB0BEC5);
       iconData = Icons.error;
-      statusText = "Error al registrar";
+      statusText = "Error al verificar asistencia";
     } else {
       cardColor = const Color(0xFFFF0967);
       iconData = Icons.close;

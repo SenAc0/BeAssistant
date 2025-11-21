@@ -187,7 +187,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
             ),
           ),
         ),
-        title: const Text("Reuniones"),
+        title: const Text("Sesiones"),
         centerTitle: true,
       ),
 
