@@ -12,7 +12,7 @@ class ApiService {
 
 
 
-  Future<bool> register(String name, String email, String password) async {
+  Future<http.Response> register(String name, String email, String password) async {
     final url = Uri.parse('$baseUrl/register');
     final response = await http.post(
       url,
@@ -20,12 +20,12 @@ class ApiService {
       body: jsonEncode({'name': name, 'email': email, 'password': password}),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      print("Error al registrar: ${response.body}");
-      return false;
+    // Devolver la respuesta completa para que el llamador pueda interpretar el código
+    if (!(response.statusCode == 200 || response.statusCode == 201)) {
+      print("Error al registrar: ${response.statusCode} -> ${response.body}");
     }
+
+    return response;
   }
 
   Future<bool> login(String email, String password) async {

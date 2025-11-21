@@ -37,16 +37,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String email = _emailController.text.trim();
     String password = _passwordController.text;
 
-    bool success = await apiService.register(name, email, password);
-    if (success) {
+    try {
+      final response = await apiService.register(name, email, password);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
       // Registro exitoso, navegar a la pantalla de login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-    } else {
+      } else if (response.statusCode == 400) {
+      // 400 -> normalmente email duplicado según API
       setState(() {
-        _errorMessage = 'Error al registrar el usuario';
+        _errorMessage = 'El correo ya está registrado';
+      });
+    } else {
+      // Otro error
+      final String bodyMsg = response.body;
+
+      setState(() {
+        _errorMessage = bodyMsg.isNotEmpty
+            ? 'Error al registrar: $bodyMsg'
+            : 'Error al registrar el usuario';
+      });
+    }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error de red: $e';
       });
     }
   }

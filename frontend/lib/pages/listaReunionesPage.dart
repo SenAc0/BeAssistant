@@ -101,7 +101,12 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
     List<dynamic> tempFiltered;
 
     if (_selectedFilter == "Todas") {
-      tempFiltered = List.from(_meetings);
+      // Mostrar solo reuniones actuales/futuras: excluir las que tienen end_time < now
+      tempFiltered = _meetings.where((m) {
+        final end = parse(m['end_time']);
+        if (end == null) return true; // sin end_time, mantener
+        return !end.isBefore(now); // end >= now -> mantener
+      }).toList();
     }
     // ===================== PRÓXIMAS =====================
     else if (_selectedFilter == "Próximas") {
