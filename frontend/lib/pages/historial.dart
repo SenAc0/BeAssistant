@@ -299,6 +299,7 @@ class ListaCard extends StatelessWidget {
     final bool pendiente = asistencia.toLowerCase() == "pendiente";
 
     return Card(
+      color: Colors.white,
       elevation: 6, 
       shadowColor: Color(0xFFAF79F2), 
       margin: const EdgeInsets.only(bottom: 10),

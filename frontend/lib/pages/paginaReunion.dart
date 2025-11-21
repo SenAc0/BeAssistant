@@ -321,12 +321,12 @@ class SesionCard extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Color(0xFFAF79F2).withOpacity(0.3), 
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
         ],
-        color: Colors.grey[300], 
+        color: Colors.white, 
         borderRadius: BorderRadius.circular(8),//16
       ),
       child: Column(
@@ -435,12 +435,12 @@ class TopicoCard extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Color(0xFFAF79F2).withOpacity(0.3), 
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
         ],
-        color: Colors.grey[300], 
+        color: Colors.white, 
         borderRadius: BorderRadius.circular(8),//16
       ),
       child: Column(
@@ -488,12 +488,12 @@ class DescripcionCard extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Color(0xFFAF79F2).withOpacity(0.3), 
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
         ],
-        color: Colors.grey[300], 
+        color: Colors.white, 
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -536,12 +536,12 @@ class NotaCard extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Color(0xFFAF79F2).withOpacity(0.3),  
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
         ],
-        color:  Colors.grey[300],
+        color:  Colors.white,
         borderRadius: BorderRadius.circular(8),//16
       ),
       child: Column(
@@ -724,8 +724,7 @@ class _Pill extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.12),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            offset: Offset(0, 2),
           ),
         ],
         color: background,

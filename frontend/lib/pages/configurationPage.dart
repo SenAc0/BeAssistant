@@ -72,11 +72,11 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
 
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Color(0xFFAF79F2).withOpacity(0.3), 
                       blurRadius: 12,
                       offset: Offset(0, 6),
                     ),
@@ -144,11 +144,11 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Color(0xFFAF79F2).withOpacity(0.3), 
             blurRadius: 12,
             offset: Offset(0, 6),
           ),

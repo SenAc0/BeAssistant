@@ -232,6 +232,8 @@ class _AgregarAsistenteCardState extends State<AgregarAsistenteCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 6,
+      shadowColor: Color(0xFFAF79F2), 
       color: _seleccionado
           ? const Color(0xFFA2CF68)
           : Colors.white,
