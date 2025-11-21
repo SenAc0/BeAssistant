@@ -406,6 +406,7 @@ class ReunionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
       elevation: 6, 
       shadowColor: Color(0xFFAF79F2), 
       margin: const EdgeInsets.only(bottom: 10),
