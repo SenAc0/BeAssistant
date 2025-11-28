@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/pages/beaconPage.dart';
 import 'package:myapp/pages/configurationPage.dart';
 import 'package:myapp/pages/historial.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
 //import 'package:myapp/pages/noHecho.dart';
 import 'package:myapp/pages/beacon_service.dart';
+import 'package:myapp/pages/noHecho.dart';
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 
@@ -22,7 +24,8 @@ class _MainScaffoldState extends State<MainScaffold> {
     _pages = [
       const Historial(),
       const ListaReunionesScreen(),
-      const BeaconDetector(),
+      const BeaconPage(),//BeaconDetector(),
+      const NoHechoPage(title: "Reportes"), //Cambiar por ReportesPage cuando esté implementada
       const ConfigurationPage(),
     ];
   }
@@ -55,6 +58,10 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Sesiones',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bluetooth_connected_outlined),
+            label: 'Beacons',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),

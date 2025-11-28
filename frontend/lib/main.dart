@@ -61,17 +61,12 @@ class MyApp extends StatelessWidget {
 
       // Mapa de rutas
       routes: {
-        '/login': (context) =>
-            const LoginScreen(), // pantalla de inicio de sesión
-        '/main': (context) =>
-            const MainScaffold(), // pantalla principal con bottom nav
-        '/crearReunion1': (context) =>
-            const CrearReunion1(), // creación de reunión
+        '/login': (context) => const LoginScreen(), // pantalla de inicio de sesión
+        '/main': (context) => MainScaffold(), // pantalla principal con bottom nav
+        '/crearReunion1': (context) => const CrearReunion1(), // creación de reunión
         '/perfil': (context) => const PerfilPage(), // perfil de usuario
-        '/listaReunion': (context) =>
-            const ListaReunionesScreen(), // lista de reuniones
-        '/configuracion': (context) =>
-            const ConfigurationPage(), // configuración de usuario
+        '/listaReunion': (context) => const ListaReunionesScreen(), // lista de reuniones
+        '/configuracion': (context) => const ConfigurationPage(), // configuración de usuario
       },
     );
   }

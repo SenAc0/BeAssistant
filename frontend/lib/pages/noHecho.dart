@@ -7,13 +7,23 @@ class NoHechoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE5E5E5),
       appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-        backgroundColor: Colors.grey[300],
         elevation: 0,
-        automaticallyImplyLeading: false, // Evita el botón de "volver"
+        automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
+        title: const Text("Trabajando en ello"),
+        centerTitle: true,
       ),
       body: Center(
         child: SingleChildScrollView(
