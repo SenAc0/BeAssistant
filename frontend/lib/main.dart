@@ -7,6 +7,8 @@ import 'package:myapp/pages/crearReunion1.dart';
 import 'package:myapp/scaffold.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:myapp/pages/infoBeacon.dart';
+import 'package:myapp/pages/addBeacon.dart';
 //import 'package:flutter/widgets.dart';
 
 Future<void> main() async {
@@ -67,6 +69,8 @@ class MyApp extends StatelessWidget {
         '/perfil': (context) => const PerfilPage(), // perfil de usuario
         '/listaReunion': (context) => const ListaReunionesScreen(), // lista de reuniones
         '/configuracion': (context) => const ConfigurationPage(), // configuración de usuario
+        '/infoBeacon': (context) => const InfoBeacon(), // info beacon
+        '/addBeacon': (context) => const AddBeaconPage(), // add beacon
       },
     );
   }

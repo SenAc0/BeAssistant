@@ -91,6 +91,7 @@ class _BeaconPageState extends State<BeaconPage> {
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       context: context,
+      
       builder: (context) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -98,9 +99,7 @@ class _BeaconPageState extends State<BeaconPage> {
             ListTile(
               title: const Text("Ver información"),
               onTap: () {
-                Navigator.pop(context);
-                // Callback editable:
-                print("Ver información → ${beacon["name"]}");
+                Navigator.pushNamed(context, '/infoBeacon');
               },
             ),
             ListTile(
@@ -117,6 +116,7 @@ class _BeaconPageState extends State<BeaconPage> {
     );
   }
 
+  int? expandedIndex;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,7 +141,7 @@ class _BeaconPageState extends State<BeaconPage> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // callback editable
+          Navigator.pushNamed(context, '/addBeacon');
         },
         elevation: 6, 
         shape: const CircleBorder(),
@@ -173,69 +173,141 @@ class _BeaconPageState extends State<BeaconPage> {
               itemCount: beacons.length,
               itemBuilder: (context, index) {
                 final beacon = beacons[index];
+                final bool isExpanded = expandedIndex == index;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Dismissible(
-                      key: UniqueKey(),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (direction) async {
-                        final confirmar = await _confirmDelete();
-                        if (confirmar) {
-                          setState(() => beacons.removeAt(index));
-                        }
-                        return confirmar;
-                      },
-                      background: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF0967),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.only(right: 20),
-                        alignment: Alignment.centerRight,
-                        child: const Icon(Icons.delete, color: Colors.white, size: 28),
+                  child: Dismissible(
+                    key: UniqueKey(),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (direction) async {
+                      final confirmar = await _confirmDelete();
+                      if (confirmar) {
+                        setState(() => beacons.removeAt(index));
+                      }
+                      return confirmar;
+                    },
+                    background: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF0967),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: const EdgeInsets.only(right: 20),
+                      alignment: Alignment.centerRight,
+                      child: const Icon(Icons.delete, color: Colors.white, size: 28),
+                    ),
+
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
                       child: Material(
-                        type: MaterialType.transparency,
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            leading: const Icon(Icons.sensors, size: 35),
-                            title: Text(beacon["name"]),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  beacon["status"],
-                                  style: TextStyle(
-                                    color: beacon["active"]
-                                        ? const Color(0xFFA2CF68)
-                                        : const Color(0xFFFF0967),
+                        elevation: 6,
+                        shadowColor: const Color(0xFFAF79F2),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Row(
+                          children: [
+                            // ================= CARD PRINCIPAL =================
+                            Expanded(
+                              flex: 7,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.horizontal(
+                                    left: const Radius.circular(12),
+                                    right: isExpanded ? Radius.zero : const Radius.circular(12),
                                   ),
                                 ),
-                                if (beacon["location"] != "") Text(beacon["location"]),
-                              ],
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                  leading: const Icon(Icons.sensors, size: 35),
+                                  title: Text(beacon["name"]),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        beacon["status"],
+                                        style: TextStyle(
+                                          color: beacon["active"]
+                                              ? const Color(0xFFA2CF68)
+                                              : const Color(0xFFFF0967),
+                                        ),
+                                      ),
+                                      if (beacon["location"] != "") Text(beacon["location"]),
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.more_vert),
+                                    onPressed: () {
+                                      setState(() {
+                                        expandedIndex = isExpanded ? null : index;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              onPressed: () => _showMoreOptions(beacon),
-                            ),
-                          ),
+
+                            // ================= LINEA SEPARADORA =================
+                            if (isExpanded)
+                              Container(
+                                width: 1,
+                                color: Colors.black.withOpacity(0.2),
+                              ),
+
+                            // ================= PANEL LATERAL =================
+                            if (isExpanded)
+                              Container(
+                                width: 130,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.horizontal(
+                                    right: Radius.circular(12),
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.pushNamed(context, '/infoBeacon');
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: Text("Ver información"),
+                                      ),
+                                    ),
+                                    const Divider(height: 1),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          beacon["active"] = !beacon["active"];
+                                          beacon["status"] = beacon["active"] ? "Activo" : "Inactivo";
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(
+                                          beacon["active"] ? "Desactivar" : "Activar",
+                                          style: const TextStyle(color: Color(0xFFFF0967)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-
                     ),
+
                   ),
                 );
-
               },
             ),
           ),
+
+
         ],
       ),
     );
