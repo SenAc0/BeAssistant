@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     func,
+    Float,
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
@@ -105,3 +106,17 @@ class MeetingReport(Base):
 
 # Add reverse relationship for meetings coordinated by a user
 User.coordinated_meetings = relationship("Meeting", back_populates="coordinator", foreign_keys=[Meeting.coordinator_id])
+
+class GeneralReport(Base):
+    __tablename__ = "general_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+
+    cantidad_asistencias = Column(Integer, nullable=False, default=0)
+    cantidad_reuniones = Column(Integer, nullable=False, default=0)
+    porcentaje_asistencias = Column(Float, nullable=False, default=0.0)
+    porcentaje_ausencias = Column(Float, nullable=False, default=0.0)
+    porcentaje_justificaciones = Column(Float, nullable=False, default=0.0)
+
+    user = relationship("User")

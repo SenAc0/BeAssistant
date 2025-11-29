@@ -64,6 +64,14 @@ class MeetingDetail(MeetingBase):
     model_config = {"from_attributes": True}
 
 
+class GeneralReport(BaseModel):
+    cantidad_asistencias: int
+    cantidad_reuniones: int
+    porcentaje_asistencias: float
+    porcentaje_ausencias: float
+    porcentaje_justificaciones: float
+
+
 # ========= Attendance =========
 class AttendanceBase(BaseModel):
     """Base fields for marking attendance for the current user."""

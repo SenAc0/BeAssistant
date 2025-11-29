@@ -136,6 +136,13 @@ def generate_meeting_report_endpoint(meeting_id: int, db: Session = Depends(get_
     return crud.generate_meeting_report(db, meeting_id=meeting_id)
 
 
+# ================= General Reports =================
+
+@app.get("/report/general", response_model=schemas.GeneralReport)
+def generate_general_report(db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    return crud.generate_general_report(db, user_id=current_user.id)
+
+
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
 def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):

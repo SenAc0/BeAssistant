@@ -1,4 +1,4 @@
-from models import User, Meeting, Attendance, Beacon, MeetingReport
+from models import User, Meeting, Attendance, Beacon, MeetingReport, GeneralReport
 from schemas import UserCreate, MeetingCreate, BeaconCreate, BeaconUpdate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -431,6 +431,33 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
     db.commit()
     db.refresh(report)
     return report
+
+
+def generate_general_report(db: Session, user_id: int):
+
+    attendance_qs = db.query(Attendance).filter(Attendance.user_id == user_id)
+
+    total_reuniones = attendance_qs.count()
+    if total_reuniones == 0:
+        return {
+            "cantidad_asistencias": 0,
+            "cantidad_reuniones": 0,
+            "porcentaje_asistencias": 0.0,
+            "porcentaje_ausencias": 0.0,
+            "porcentaje_justificaciones": 0.0,
+        }
+
+    asistencias = attendance_qs.filter(Attendance.status == "present").count()
+    ausencias = attendance_qs.filter(Attendance.status == "absent").count()
+    justificaciones = attendance_qs.filter(Attendance.status == "late").count()
+
+    return {
+        "cantidad_asistencias": asistencias,
+        "cantidad_reuniones": total_reuniones,
+        "porcentaje_asistencias": (asistencias / total_reuniones) * 100,
+        "porcentaje_ausencias": (ausencias / total_reuniones) * 100,
+        "porcentaje_justificaciones": (justificaciones / total_reuniones) * 100,
+    }
 
 
 
