@@ -116,3 +116,21 @@ class Beacon(BeaconBase):
     last_used: datetime
     
     model_config = {"from_attributes": True}
+
+
+# ========= Meeting Report =========
+class MeetingReport(BaseModel):
+    """Reporte de una reunión específica."""
+    id: int
+    meeting_id: int
+    fecha: str
+    nombre_reunion: str
+    asistencias_totales: int
+    porcentaje_asistencias: float
+    porcentaje_ausencias: float
+
+    # Campos marcados con * (definidos pero sin lógica todavía)
+    cantidad_asistencias: int | None = None
+    cantidad_reuniones: int | None = None
+
+    model_config = {"from_attributes": True}

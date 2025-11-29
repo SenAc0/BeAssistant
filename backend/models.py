@@ -84,5 +84,24 @@ class Beacon(Base):
     meetings = relationship("Meeting", back_populates="beacon")
 
 
+class MeetingReport(Base):
+    __tablename__ = "meeting_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id", ondelete="CASCADE"), index=True, nullable=False)
+
+    fecha = Column(String, nullable=False)
+    nombre_reunion = Column(String, nullable=False)
+    asistencias_totales = Column(Integer, nullable=False, default=0)
+    porcentaje_asistencias = Column(Integer, nullable=False, default=0)
+    porcentaje_ausencias = Column(Integer, nullable=False, default=0)
+
+    # Campos marcados con * (definir pero dejar sin uso por ahora)
+    cantidad_asistencias = Column(Integer, nullable=True)
+    cantidad_reuniones = Column(Integer, nullable=True)
+
+    meeting = relationship("Meeting")
+
+
 # Add reverse relationship for meetings coordinated by a user
 User.coordinated_meetings = relationship("Meeting", back_populates="coordinator", foreign_keys=[Meeting.coordinator_id])

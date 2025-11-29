@@ -1,4 +1,4 @@
-from models import User, Meeting, Attendance, Beacon
+from models import User, Meeting, Attendance, Beacon, MeetingReport
 from schemas import UserCreate, MeetingCreate, BeaconCreate, BeaconUpdate
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -368,6 +368,69 @@ def update_beacon_last_used(db: Session, beacon_id: str):
         db.commit()
         db.refresh(beacon)
     return beacon
+
+
+# ================= Meeting Report =================
+def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
+    """Genera (o devuelve si ya existe) el reporte de una reunión específica.
+
+    - fecha: se toma de start_time (en formato YYYY-MM-DD) o created_at si no hay start_time.
+    - nombre_reunion: título de la reunión.
+    - asistencias_totales: total de registros de asistencia (present/late/absent).
+    - porcentaje_asistencias: porcentaje de present + late sobre total.
+    - porcentaje_ausencias: porcentaje de absent sobre total.
+
+    Los campos cantidad_asistencias y cantidad_reuniones quedan definidos pero sin lógica aún.
+    """
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Si ya existe un reporte para esta reunión, lo devolvemos
+    existing = db.query(MeetingReport).filter(MeetingReport.meeting_id == meeting_id).first()
+    if existing:
+        return existing
+
+    # Calcular datos de asistencia
+    attendance_qs = db.query(Attendance).filter(Attendance.meeting_id == meeting_id)
+    total = attendance_qs.count()
+
+    present_count = attendance_qs.filter(Attendance.status.in_(["present", "late"])).count()
+    absent_count = attendance_qs.filter(Attendance.status == "absent").count()
+
+    if total > 0:
+        porcentaje_asistencias = (present_count / total) * 100.0
+        porcentaje_ausencias = (absent_count / total) * 100.0
+    else:
+        porcentaje_asistencias = 0.0
+        porcentaje_ausencias = 0.0
+
+    # Fecha como string (usar start_time si existe, si no created_at)
+    base_dt = meeting.start_time or meeting.created_at
+    if base_dt is None:
+        fecha_str = ""
+    else:
+        # Normalizar a tz Chile y luego formatear solo fecha
+        if base_dt.tzinfo is None:
+            base_dt = base_dt.replace(tzinfo=timezone.utc)
+        fecha_str = base_dt.astimezone(CHILE_TZ).strftime("%Y-%m-%d")
+
+    report = MeetingReport(
+        meeting_id=meeting.id,
+        fecha=fecha_str,
+        nombre_reunion=meeting.title,
+        asistencias_totales=total,
+        porcentaje_asistencias=porcentaje_asistencias,
+        porcentaje_ausencias=porcentaje_ausencias,
+        # Campos * quedan sin lógica aún
+        cantidad_asistencias=None,
+        cantidad_reuniones=None,
+    )
+
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return report
 
 
 

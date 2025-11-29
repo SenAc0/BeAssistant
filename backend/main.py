@@ -116,6 +116,26 @@ def get_meeting_for_user(meeting_id: int, db: Session = Depends(get_db)):
     
     return response
 
+
+# ================= Meeting Reports =================
+@app.post("/meetings/{meeting_id}/report", response_model=schemas.MeetingReport)
+def generate_meeting_report_endpoint(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Genera (o devuelve si ya existe) el reporte de una reunión.
+
+    Requiere que el usuario autenticado sea el coordinador de la reunión.
+    Requiere que la reunión haya finalizado.
+    Retorna el reporte generado.
+    """
+    meeting = crud.get_meeting(db, meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    if meeting.coordinator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the coordinator can generate the report")
+
+    return crud.generate_meeting_report(db, meeting_id=meeting_id)
+
+
 # ================= Attendance =================
 @app.post("/attendance/mark", response_model=schemas.Attendance)
 def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
