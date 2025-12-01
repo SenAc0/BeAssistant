@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/api_service.dart';
+import 'package:myapp/pages/reporteReunion.dart';
 
 class Historial extends StatefulWidget {
   const Historial({super.key});
   @override
   State<Historial> createState() => _HistorialState();
+  
 }
 
 class _HistorialState extends State<Historial> {
@@ -12,6 +14,8 @@ class _HistorialState extends State<Historial> {
   List<dynamic> reunionesMesPasado = [];
   List<dynamic> reunionesAntiguas = [];
   bool cargando = true;
+  bool mostrarSoloCoordinador = false;
+
 
   @override
   void initState() {
@@ -21,6 +25,9 @@ class _HistorialState extends State<Historial> {
 
   Future<void> cargarHistorial() async {
     final allMeetings = await ApiService().getMyMeetings();
+    final perfil = await ApiService().getProfile();
+    final int myUserId = perfil?['id'] ?? 0;
+
 
     if (allMeetings == null) {
       setState(() => cargando = false);
@@ -111,13 +118,28 @@ class _HistorialState extends State<Historial> {
     for (final m in antiguas) {
       m['_asistencia_label'] = lookupStatus(m);
     }
-
     setState(() {
       reunionesSemana = semana;
       reunionesMesPasado = mes;
       reunionesAntiguas = antiguas;
+
+      if (mostrarSoloCoordinador) {
+        reunionesSemana = reunionesSemana
+            .where((m) => m["coordinator_id"] == myUserId)
+            .toList();
+
+        reunionesMesPasado = reunionesMesPasado
+            .where((m) => m["coordinator_id"] == myUserId)
+            .toList();
+
+        reunionesAntiguas = reunionesAntiguas
+            .where((m) => m["coordinator_id"] == myUserId)
+            .toList();
+      }
+
       cargando = false;
     });
+
   }
 
   List<dynamic> filtrarEstaSemana(List<dynamic> meetings) {
@@ -143,6 +165,7 @@ class _HistorialState extends State<Historial> {
       return fecha.isAfter(inicio) && fecha.isBefore(fin);
     }).toList();
   }
+  
 
   String formatearFechaTexto(DateTime fecha) {
     const dias = [
@@ -188,6 +211,19 @@ class _HistorialState extends State<Historial> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: ListView(
                 children: [
+                  CoordinadorCard(
+                    value: mostrarSoloCoordinador,
+                    onChanged: (value) {
+                      setState(() {
+                        mostrarSoloCoordinador = value;
+                      });
+                      cargarHistorial();  
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+
                   // Esta semana
                   if (reunionesSemana.isNotEmpty) ...[
                     Text("Esta semana",
@@ -209,6 +245,15 @@ class _HistorialState extends State<Historial> {
                             "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
                             "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
                         asistencia: asistencia,
+                        onTap: mostrarSoloCoordinador ? () {
+                          
+                           Navigator.push(
+                             context,
+                             MaterialPageRoute(
+                               builder: (_) => ReporteReunion(),
+                             ),
+                           );
+                         } : null, 
                       );
                     }),
                     const SizedBox(height: 20),
@@ -235,6 +280,14 @@ class _HistorialState extends State<Historial> {
                             "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
                             "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
                         asistencia: asistencia,
+                        onTap: mostrarSoloCoordinador ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReporteReunion(),
+                            ),
+                          );
+                        } : null,
                       );
                     }),
                     const SizedBox(height: 20),
@@ -261,6 +314,14 @@ class _HistorialState extends State<Historial> {
                             "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
                             "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
                         asistencia: asistencia,
+                        onTap: mostrarSoloCoordinador ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReporteReunion(),
+                            ),
+                          );
+                        } : null,
                       );
                     }),
                     const SizedBox(height: 20),
@@ -284,6 +345,7 @@ class ListaCard extends StatelessWidget {
   final String fecha;
   final String asistencia;
   final String nombre;
+  final VoidCallback? onTap;
 
   const ListaCard({
     super.key,
@@ -291,6 +353,7 @@ class ListaCard extends StatelessWidget {
     required this.fecha,
     required this.asistencia,
     required this.nombre,
+    this.onTap,
   });
 
   @override
@@ -298,7 +361,12 @@ class ListaCard extends StatelessWidget {
     final bool estaPresente = asistencia.toLowerCase() == "presente";
     final bool pendiente = asistencia.toLowerCase() == "pendiente";
 
-    return Card(
+    return InkWell(
+      onTap: onTap,
+       borderRadius: BorderRadius.circular(10),
+      splashColor: Colors.purple.withOpacity(0.2),
+      highlightColor: Colors.transparent,
+      child: Card(
       color: Colors.white,
       elevation: 6, 
       shadowColor: Color(0xFFAF79F2), 
@@ -364,6 +432,67 @@ class ListaCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
+    );
+  }
+}
+
+
+
+class CoordinadorCard extends StatefulWidget {
+  final bool value;
+  final Function(bool) onChanged;
+
+  const CoordinadorCard({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  State<CoordinadorCard> createState() => _CoordinadorCardState();
+}
+
+
+class _CoordinadorCardState extends State<CoordinadorCard> {
+  bool notificacionesActivadas = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12),
+    boxShadow: [
+      BoxShadow(
+        color: const Color(0xFFAF79F2).withOpacity(0.3),
+        blurRadius: 12,
+        offset: const Offset(0, 6),
+      ),
+    ],
+  ),
+  child: ListTile(
+    leading: const Icon(Icons.manage_accounts, color: Colors.black),
+    title: const Text(
+      'Mis reuniones como coordinador',
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+    ),
+    subtitle: const Text('Filtra para ver solo reuniones que coordinaste'),
+    trailing: Switch(
+      value: widget.value,       
+      onChanged: (value) {
+        widget.onChanged(value); 
+      },
+      activeColor: const Color(0xFFAF79F2),
+    )
+  ),
+),
+
+
+      ],
     );
   }
 }

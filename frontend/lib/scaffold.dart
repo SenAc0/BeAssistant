@@ -25,7 +25,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       const Historial(),
       const ListaReunionesScreen(),
       const BeaconPage(),//BeaconDetector(),
-      const ReporteReunion(), 
+      const ReporteGeneral(), 
       const ConfigurationPage(),
     ];
   }

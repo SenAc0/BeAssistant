@@ -31,6 +31,7 @@ class _ReporteGeneralState extends State<ReporteGeneral> {
 
               Row(
                 children: [
+                  
                   Expanded(
                     child: ReunionesAsistidasCard(
                       cantAsistidas: 8,
@@ -79,6 +80,7 @@ class ReunionesAsistidasCard extends StatelessWidget {
                 child: Column(
 
                   children: [
+                    SizedBox(width: 12),
                     Text(
                       'Reuniones Asistidas',
                       style: const TextStyle(
@@ -127,6 +129,7 @@ class ReunionesTotalesCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
+                    SizedBox(width: 12),
                     Text(
                       'Reuniones Totales',
                       style: const TextStyle(
@@ -269,8 +272,8 @@ class PieChart2State extends State<PieChartSample2> {
                 ),
                 SizedBox(height: 8),
                 Indicator(
-                  color: AppColors.contentColorPurple,
-                  text: 'Justificado',
+                  color:   Color(0xFFFF9800),
+                  text: 'Atrasado',
                   isSquare: true,
                 ),
               ],
@@ -320,7 +323,7 @@ class PieChart2State extends State<PieChartSample2> {
 
         case 2:
           return PieChartSectionData(
-            color: AppColors.contentColorPurple,
+            color:Color(0xFFFF9800),
             value: widget.justificado,
             title: '${widget.justificado}%',
             radius: radius,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/resources/app_resources.dart';
 import 'package:myapp/widgets/indicator.dart';
-
+import 'package:myapp/pages/listaAsistentes.dart';
 
 class ReporteReunion extends StatefulWidget {
   const ReporteReunion({super.key});
@@ -30,13 +30,17 @@ class _ReporteReunionState extends State<ReporteReunion> {
             SizedBox(height: 16),
             AsistenciasCard(asistenciasTotales: 100),
             SizedBox(height: 16),
+           
+            CantPAACard(
+              presentes: 8,
+              ausentes: 25,
+              atrasados: 2,
+            ),
+            SizedBox(height: 16),
             GraficoCard(),
             SizedBox(height: 16),
-            TuAsistenciaCard(
-              cantAsistidas: 8,
-              cantTotal: 25,
-              nombre: "Reunión de Proyecto",
-            ),
+            ListaAsistentes()
+           
 
           ],
         ),
@@ -71,11 +75,6 @@ class NombreCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
                     Text(
                       nombre,
                       style: const TextStyle(
@@ -83,7 +82,7 @@ class NombreCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 6),
+                    const Spacer(),
                     Text(
                       fecha,
                       style: const TextStyle(fontSize: 14),
@@ -92,11 +91,9 @@ class NombreCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
-    );
+          );
+  
   }
 }
 
@@ -123,7 +120,7 @@ class AsistenciasCard extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Asistencias Totales',
+                  'Invitados Totales',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -163,7 +160,6 @@ class GraficoCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
         child: Column(
-          //crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Gráfico de Asistencia',
@@ -173,14 +169,12 @@ class GraficoCard extends StatelessWidget {
               ),
             ),
 
-            //const SizedBox(height: 12),
-
             SizedBox(
               height: 230, 
               child: PieChartSample2(
                 presente: 10,
                 ausente: 65,
-                justificado: 25,
+                atrasado: 25,
               ),
             ),
           ],
@@ -193,13 +187,13 @@ class GraficoCard extends StatelessWidget {
 class PieChartSample2 extends StatefulWidget {
   final double presente;
   final double ausente;
-  final double justificado;
+  final double atrasado;
 
   const PieChartSample2({
     super.key,
     required this.presente,
     required this.ausente,
-    required this.justificado,
+    required this.atrasado,
   });
 
   @override
@@ -263,8 +257,8 @@ class PieChart2State extends State<PieChartSample2> {
                 ),
                 SizedBox(height: 8),
                 Indicator(
-                  color: AppColors.contentColorPurple,
-                  text: 'Justificado',
+                  color: Color(0xFFFF9800),
+                  text: 'Atrasado',
                   isSquare: true,
                 ),
               ],
@@ -314,9 +308,9 @@ class PieChart2State extends State<PieChartSample2> {
 
         case 2:
           return PieChartSectionData(
-            color: AppColors.contentColorPurple,
-            value: widget.justificado,
-            title: '${widget.justificado}%',
+            color: const Color(0xFFFF9800),
+            value: widget.atrasado,
+            title: '${widget.atrasado}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -333,52 +327,76 @@ class PieChart2State extends State<PieChartSample2> {
   }
 }
 
-class TuAsistenciaCard extends StatelessWidget {
-  final int cantAsistidas;
-  final int cantTotal;
-  final String nombre;
+class CantPAACard extends StatelessWidget {
+  final int presentes;
+  final int ausentes;
+  final int atrasados;
 
-  const TuAsistenciaCard({
+  const CantPAACard({
     super.key,
-    required this.cantAsistidas,
-    required this.cantTotal,
-    required this.nombre,
-   
+    required this.presentes,
+    required this.ausentes,
+    required this.atrasados,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 80,
-      child: Card(
-        color: Colors.white,
-        elevation: 6,
-        shadowColor: Color(0xFFAF79F2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tu asistencia: $nombre',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      '$cantAsistidas/$cantTotal: Reuniones Asistidas',
-                      style: const TextStyle(fontSize: 14),
-                    ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: _buildSingleCard(
+            'Presentes',
+            presentes,
+            AppColors.contentColorGreen,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSingleCard(
+            'Ausentes',
+            ausentes,
+            const Color(0xFFFF0967),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSingleCard(
+            'Atrasados',
+            atrasados,
+            const Color(0xFFFF9800),
+          ),
+        ),
+      ],
+    );
+  }
 
-                  ],
+  Widget _buildSingleCard(String label, int value, Color color) {
+    return Card(
+      color: Colors.white,
+      elevation: 6,
+      shadowColor: const Color(0xFFAF79F2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SizedBox(
+        height: 80,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              
+              Text(
+                label,
+                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "$value",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
             ],
@@ -388,3 +406,4 @@ class TuAsistenciaCard extends StatelessWidget {
     );
   }
 }
+
