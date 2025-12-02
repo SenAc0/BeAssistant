@@ -591,7 +591,7 @@ class AsistenciaCard extends StatelessWidget {
     String statusText;
 
     if (isChecking) {
-      cardColor = const Color(0xFFFFC75F);
+      cardColor =  Color(0xFFB897E6);
       iconData = Icons.refresh;
       statusText = "Verificando asistencia...";
     } else if (statusCode == "present") {
@@ -599,7 +599,7 @@ class AsistenciaCard extends StatelessWidget {
       iconData = Icons.check_circle;
       statusText = "Asistencia registrada";
     } else if (statusCode == "late") {
-      cardColor = const Color(0xFFFFC878);
+      cardColor = const Color(0xFFFF9800);
       iconData = Icons.access_time;
       statusText = "Llegaste tarde";
     } else if (statusCode == "error") {
