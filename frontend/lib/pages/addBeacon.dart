@@ -15,9 +15,6 @@ class _AddBeaconPageState extends State<AddBeaconPage> {
   final TextEditingController minorController = TextEditingController();
   final TextEditingController majorController = TextEditingController();
 
-  // Estado
-  Color selectedColor = const Color(0xFF39FF11); // color por defecto
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,55 +119,8 @@ class _AddBeaconPageState extends State<AddBeaconPage> {
               ],
             ),
 
-            const SizedBox(height: 20),
 
-            // Color
-            const Text("Color",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                // Circle color preview
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: selectedColor,
-                ),
-                const SizedBox(width: 10),
-
-                // Hex label
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    selectedColor.value
-                        .toRadixString(16)
-                        .toUpperCase()
-                        .substring(2),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Botón cambiar color
-                TextButton(
-                  onPressed: () {
-                    // Aquí puedes abrir un selector de color más adelante
-                    setState(() {
-                      selectedColor = const Color(0xFFAF79F2);
-                    });
-                  },
-                  child: const Text("Cambiar"),
-                )
-              ],
-            ),
-
-            const SizedBox(height: 30),
+            const SizedBox(height: 100),
 
             // Botones Guardar y Cancelar
             Center(

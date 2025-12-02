@@ -93,6 +93,7 @@ class _InfoBeaconState extends State<InfoBeacon> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                const SizedBox(height: 40),
                 // Tarjeta superior
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -110,25 +111,11 @@ class _InfoBeaconState extends State<InfoBeacon> {
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: beacon.activo ? Colors.green.shade100 : Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          beacon.activo ? "ACTIVO" : "INACTIVO",
-                          style: TextStyle(
-                            color: beacon.activo ? const Color(0xFFA2CF68) : const Color(0xFFFF0967),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
 
                 // Tarjeta de datos
                 Container(
@@ -137,23 +124,26 @@ class _InfoBeaconState extends State<InfoBeacon> {
                     borderRadius: BorderRadius.circular(12),
                     color: Colors.white,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildField("ID:", beacon.id),
-                      _buildField("Major:", "${beacon.major}"),
-                      _buildField("Minor:", "${beacon.minor}"),
-                      _buildField("Última vez usado:", beacon.ultimaVezUsado),
-                      _buildField("Ubicación:", beacon.ubicacion),
-                      
-                      const SizedBox(height: 6),
-                      _buildField(
-                        "Color:",
-                        beacon.colorNombre,
-                        trailing: CircleAvatar(radius: 12, backgroundColor: beacon.color),
-                        valueMaxWidthFraction: 0.5,
-                      ),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final gapFraction = 0.025; // 2.5% de la altura de la pantalla
+                      final gap = MediaQuery.of(context).size.height * gapFraction;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildField("ID:", beacon.id),
+                          SizedBox(height: gap),
+                          _buildField("Major:", "${beacon.major}"),
+                          SizedBox(height: gap),
+                          _buildField("Minor:", "${beacon.minor}"),
+                          SizedBox(height: gap),
+                          _buildField("Última vez usado:", beacon.ultimaVezUsado),
+                          SizedBox(height: gap),
+                          _buildField("Ubicación:", beacon.ubicacion),
+                        ],
+                      );
+                    },
                   ),
                 )
               ],
@@ -193,7 +183,7 @@ class _InfoBeaconState extends State<InfoBeacon> {
             ],
           ),
           const SizedBox(height: 8),
-          if(title != 'Color:') Divider(color: Colors.grey.shade300, thickness: 1),
+          if(title != 'Ubicación:') Divider(color: Colors.grey.shade300, thickness: 1),
         ],
       ),
     );

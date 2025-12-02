@@ -8,41 +8,29 @@ class BeaconPage extends StatefulWidget {
 }
 
 class _BeaconPageState extends State<BeaconPage> {
-  // Datos de ejemplo mientras no exista backend
   List<Map<String, dynamic>> beacons = [
     {
       "name": "Beacon A1-1",
-      "status": "Activo",
       "location": "Oficina 2",
-      "active": true
     },
     {
       "name": "Beacon B3-3",
-      "status": "Activo",
       "location": "Sala de juntas 4",
-      "active": true
     },
     {
       "name": "Beacon B3-4",
-      "status": "Activo",
       "location": "Sala de juntas 4",
-      "active": true
     },
     {
       "name": "Beacon F2-3",
-      "status": "Inactivo",
-      "location": "",
-      "active": false
+      "location": "TM 3-1",
     },
     {
       "name": "Beacon A6-6",
-      "status": "Inactivo",
-      "location": "",
-      "active": false
+      "location": "A-313",
     },
   ];
 
-  // Popup de confirmación de borrado
   Future<bool> _confirmDelete() async {
     return await showDialog(
           context: context,
@@ -65,7 +53,7 @@ class _BeaconPageState extends State<BeaconPage> {
             actions: [
               TextButton(
                 style: TextButton.styleFrom(
-                  backgroundColor: Color(0xFFFF0967),
+                  backgroundColor: const Color(0xFFFF0967),
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(context, false),
@@ -73,7 +61,7 @@ class _BeaconPageState extends State<BeaconPage> {
               ),
               TextButton(
                 style: TextButton.styleFrom(
-                  backgroundColor: Color(0xFFA2CF68),
+                  backgroundColor: const Color(0xFFA2CF68),
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(context, true),
@@ -85,38 +73,6 @@ class _BeaconPageState extends State<BeaconPage> {
         false;
   }
 
-  // Pop-up del menú "Ver información / Desactivar"
-  void _showMoreOptions(Map<String, dynamic> beacon) {
-    showModalBottomSheet(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      context: context,
-      
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text("Ver información"),
-              onTap: () {
-                Navigator.pushNamed(context, '/infoBeacon');
-              },
-            ),
-            ListTile(
-              title: Text(beacon["active"] ? "Desactivar" : "Activar"),
-              onTap: () {
-                Navigator.pop(context);
-                // Callback editable:
-                print("Cambiar estado → ${beacon["name"]}");
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  int? expandedIndex;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,19 +94,16 @@ class _BeaconPageState extends State<BeaconPage> {
         title: const Text("Gestión de Beacons"),
         centerTitle: true,
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, '/addBeacon');
         },
-        elevation: 6, 
+        elevation: 6,
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),
-
       body: Column(
         children: [
-          // Barra de búsqueda
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -166,14 +119,11 @@ class _BeaconPageState extends State<BeaconPage> {
               ),
             ),
           ),
-
-          // Lista de beacons
           Expanded(
             child: ListView.builder(
               itemCount: beacons.length,
               itemBuilder: (context, index) {
                 final beacon = beacons[index];
-                final bool isExpanded = expandedIndex == index;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -187,127 +137,48 @@ class _BeaconPageState extends State<BeaconPage> {
                       }
                       return confirmar;
                     },
-                    background: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF0967),
-                        borderRadius: BorderRadius.circular(12),
+                    background: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF0967),
+                        ),
+                        padding: const EdgeInsets.only(right: 20),
+                        alignment: Alignment.centerRight,
+                        child: const Icon(Icons.delete,
+                            color: Colors.white, size: 28),
                       ),
-                      padding: const EdgeInsets.only(right: 20),
-                      alignment: Alignment.centerRight,
-                      child: const Icon(Icons.delete, color: Colors.white, size: 28),
                     ),
-
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      child: Material(
-                        elevation: 6,
-                        shadowColor: const Color(0xFFAF79F2),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Row(
+                    child: Material(
+                      elevation: 6,
+                      shadowColor: const Color(0xFFAF79F2),
+                      borderRadius: BorderRadius.circular(12),
+                      child: ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16),
+                        leading: const Icon(Icons.sensors, size: 35, color: Color(0xFFA2CF68),),
+                        title: Text(beacon["name"]),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // ================= CARD PRINCIPAL =================
-                            Expanded(
-                              flex: 7,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.horizontal(
-                                    left: const Radius.circular(12),
-                                    right: isExpanded ? Radius.zero : const Radius.circular(12),
-                                  ),
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                                  leading: const Icon(Icons.sensors, size: 35),
-                                  title: Text(beacon["name"]),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        beacon["status"],
-                                        style: TextStyle(
-                                          color: beacon["active"]
-                                              ? const Color(0xFFA2CF68)
-                                              : const Color(0xFFFF0967),
-                                        ),
-                                      ),
-                                      if (beacon["location"] != "") Text(beacon["location"]),
-                                    ],
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.more_vert),
-                                    onPressed: () {
-                                      setState(() {
-                                        expandedIndex = isExpanded ? null : index;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // ================= LINEA SEPARADORA =================
-                            if (isExpanded)
-                              Container(
-                                width: 1,
-                                color: Colors.black.withOpacity(0.2),
-                              ),
-
-                            // ================= PANEL LATERAL =================
-                            if (isExpanded)
-                              Container(
-                                width: 130,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.horizontal(
-                                    right: Radius.circular(12),
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.pushNamed(context, '/infoBeacon');
-                                      },
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(12),
-                                        child: Text("Ver información"),
-                                      ),
-                                    ),
-                                    const Divider(height: 1),
-                                    InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          beacon["active"] = !beacon["active"];
-                                          beacon["status"] = beacon["active"] ? "Activo" : "Inactivo";
-                                        });
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: Text(
-                                          beacon["active"] ? "Desactivar" : "Activar",
-                                          style: const TextStyle(color: Color(0xFFFF0967)),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            if (beacon["location"] != "")
+                              Text(beacon["location"]),
                           ],
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.more_vert),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/infoBeacon');
+                          },
                         ),
                       ),
                     ),
-
                   ),
                 );
               },
             ),
           ),
-
-
         ],
       ),
     );
