@@ -133,7 +133,10 @@ class MeetingReport(BaseModel):
     meeting_id: int
     fecha: str
     nombre_reunion: str
-    asistencias_totales: int
+    invitados_totales: int
+    asistentes_totales: int
+    llegadas_tarde: int
+    ausentes: int
     porcentaje_asistencias: float
     porcentaje_ausencias: float
 

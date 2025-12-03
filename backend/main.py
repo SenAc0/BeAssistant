@@ -136,6 +136,27 @@ def generate_meeting_report_endpoint(meeting_id: int, db: Session = Depends(get_
     return crud.generate_meeting_report(db, meeting_id=meeting_id)
 
 
+@app.get("/meetings/{meeting_id}/report", response_model=schemas.MeetingReport)
+def get_meeting_report(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Obtiene el reporte ya generado de una reunión.
+
+    No crea nada nuevo; si no hay reporte, responde 404.
+    Solo el coordinador puede consultarlo.
+    """
+    meeting = crud.get_meeting(db, meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    if meeting.coordinator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the coordinator can view the report")
+
+    report = crud.get_meeting_report(db, meeting_id=meeting_id)
+    if not report:
+        raise HTTPException(status_code=404, detail="Meeting report not found")
+
+    return report
+
+
 # ================= General Reports =================
 
 @app.get("/report/general", response_model=schemas.GeneralReport)

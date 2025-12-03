@@ -241,6 +241,14 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "a
     if now_utc > end_utc:
         raise HTTPException(status_code=400, detail="Meeting has already ended")
 
+    # Regla de estado automático: present si marca entre inicio y mitad, late entre mitad y fin
+    duration_seconds = (end_utc - start_utc).total_seconds()
+    half_time = start_utc + timedelta(seconds=duration_seconds / 2)
+    if now_utc <= half_time:
+        auto_status = "present"
+    else:
+        auto_status = "late"
+
     # Find existing attendance
     existing = (
         db.query(Attendance)
@@ -248,12 +256,12 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "a
         .first()
     )
     if existing:
-        existing.status = status
+        existing.status = auto_status
         db.commit()
         db.refresh(existing)
         return existing
 
-    att = Attendance(user_id=user_id, meeting_id=meeting_id, status=status)
+    att = Attendance(user_id=user_id, meeting_id=meeting_id, status=auto_status)
     db.add(att)
     db.commit()
     db.refresh(att)
@@ -393,14 +401,20 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
 
     # Calcular datos de asistencia
     attendance_qs = db.query(Attendance).filter(Attendance.meeting_id == meeting_id)
-    total = attendance_qs.count()
 
-    present_count = attendance_qs.filter(Attendance.status.in_(["present", "late"])).count()
+    # Invitados totales: cantidad de registros de attendance (todos los que fueron agregados)
+    invitados_totales = attendance_qs.count()
+
+    # Clasificación por estado
+    present_count = attendance_qs.filter(Attendance.status == "present").count()
+    late_count = attendance_qs.filter(Attendance.status == "late").count()
     absent_count = attendance_qs.filter(Attendance.status == "absent").count()
 
-    if total > 0:
-        porcentaje_asistencias = (present_count / total) * 100.0
-        porcentaje_ausencias = (absent_count / total) * 100.0
+    asistentes_totales = present_count + late_count
+
+    if invitados_totales > 0:
+        porcentaje_asistencias = (asistentes_totales / invitados_totales) * 100.0
+        porcentaje_ausencias = (absent_count / invitados_totales) * 100.0
     else:
         porcentaje_asistencias = 0.0
         porcentaje_ausencias = 0.0
@@ -419,7 +433,10 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
         meeting_id=meeting.id,
         fecha=fecha_str,
         nombre_reunion=meeting.title,
-        asistencias_totales=total,
+        invitados_totales=invitados_totales,
+        asistentes_totales=asistentes_totales,
+        llegadas_tarde=late_count,
+        ausentes=absent_count,
         porcentaje_asistencias=porcentaje_asistencias,
         porcentaje_ausencias=porcentaje_ausencias,
         # Campos * quedan sin lógica aún
@@ -431,6 +448,11 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
     db.commit()
     db.refresh(report)
     return report
+
+
+def get_meeting_report(db: Session, meeting_id: int) -> MeetingReport | None:
+    """Obtiene el reporte de una reunión si existe, sin generarlo."""
+    return db.query(MeetingReport).filter(MeetingReport.meeting_id == meeting_id).first()
 
 
 def generate_general_report(db: Session, user_id: int):

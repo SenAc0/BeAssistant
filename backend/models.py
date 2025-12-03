@@ -93,7 +93,15 @@ class MeetingReport(Base):
 
     fecha = Column(String, nullable=False)
     nombre_reunion = Column(String, nullable=False)
-    asistencias_totales = Column(Integer, nullable=False, default=0)
+
+    # Número total de invitados (usuarios asociados a la reunión, sin importar si asistieron)
+    invitados_totales = Column(Integer, nullable=False, default=0)
+
+    # Asistentes clasificados por estado
+    asistentes_totales = Column(Integer, nullable=False, default=0)  # present + late
+    llegadas_tarde = Column(Integer, nullable=False, default=0)      # late
+    ausentes = Column(Integer, nullable=False, default=0)            # absent
+
     porcentaje_asistencias = Column(Integer, nullable=False, default=0)
     porcentaje_ausencias = Column(Integer, nullable=False, default=0)
 
