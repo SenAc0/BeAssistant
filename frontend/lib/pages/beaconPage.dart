@@ -28,7 +28,8 @@ class _BeaconPageState extends State<BeaconPage> {
       final data = await _apiService.getBeacons();
       setState(() {
         beacons = List<Map<String, dynamic>>.from(data.map((item) => {
-          "name": item["id"] ?? "Sin nombre",
+          "id": item["id"],
+          "name": item["name"] ?? "Sin nombre",
           "location": item["ubicacion"] ?? item["location"] ?? "",
         }));
         _isLoading = false;
@@ -110,6 +111,7 @@ class _BeaconPageState extends State<BeaconPage> {
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'beaconPageFAB',
         onPressed: () async {
           await Navigator.pushNamed(context, '/addBeacon');
           // Recargar la lista después de agregar un beacon
@@ -159,9 +161,34 @@ class _BeaconPageState extends State<BeaconPage> {
                     confirmDismiss: (direction) async {
                       final confirmar = await _confirmDelete();
                       if (confirmar) {
-                        setState(() => beacons.removeAt(index));
+                        try {
+                          final success = await _apiService.deleteBeacon(beacon["id"]);
+                          if (success) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Beacon eliminado exitosamente")),
+                              );
+                            }
+                            return true; 
+                          } else {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Error al eliminar el beacon")),
+                              );
+                            }
+                            return false; 
+                          }
+                        } catch (e) {
+                          print("Error al eliminar beacon: $e");
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: $e")),
+                            );
+                          }
+                          return false;
+                        }
                       }
-                      return confirmar;
+                      return false;
                     },
                     background: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
