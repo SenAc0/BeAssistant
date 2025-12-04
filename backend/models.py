@@ -20,6 +20,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    is_admin = Column(Boolean, default=False) #Boleano para saber si el usuario es admin
 
     # Relationships
     attendances = relationship("Attendance", back_populates="user", cascade="all, delete-orphan")

@@ -6,7 +6,9 @@ import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/beacon_service.dart';
 import 'package:myapp/pages/reporteReunion.dart';
 import 'package:myapp/pages/reporteGeneral.dart';
+import 'package:myapp/api_service.dart';
 class MainScaffold extends StatefulWidget {
+  
   const MainScaffold({super.key});
 
   @override
@@ -15,11 +17,12 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 1;
-
+  bool? isAdmin;
   late final List<Widget> _pages;
 
   @override
   void initState() {
+    cargarPerfil();
     super.initState();
     _pages = [
       const Historial(),
@@ -30,12 +33,29 @@ class _MainScaffoldState extends State<MainScaffold> {
     ];
   }
 
-  void _onItemTapped(int index) {
+  Future<void> cargarPerfil() async {
+    final me = await ApiService().getProfile();
     setState(() {
-      _selectedIndex = index;
+      isAdmin = me?["is_admin"] ?? false;
+      // si no es admin y estaba parado en index 2 → moverlo
+      if (isAdmin == false && _selectedIndex == 2) _selectedIndex = 1;
     });
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      if (isAdmin == true) {
+        // admin usa índices tal cual
+        _selectedIndex = index;
+      } else {
+        // NO admin tiene que saltarse el índice 2
+        if (index == 0) _selectedIndex = 0; // Historial
+        if (index == 1) _selectedIndex = 1; // Sesiones
+        if (index == 2) _selectedIndex = 3; // Reportes
+        if (index == 3) _selectedIndex = 4; // Configuración
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,29 +65,39 @@ class _MainScaffoldState extends State<MainScaffold> {
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: isAdmin == true
+            ? _selectedIndex
+            : (_selectedIndex == 0
+                  ? 0
+                  : _selectedIndex == 1
+                  ? 1
+                  : _selectedIndex == 3
+                  ? 2
+                  : 3),
+                  
         selectedItemColor: Color(0xFFAF79F2), 
         unselectedItemColor: Colors.black54,
         type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'Historial',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Sesiones',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bluetooth_connected_outlined),
-            label: 'Beacons',
-          ),
-          BottomNavigationBarItem(
+          if (isAdmin == true)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.bluetooth_connected_outlined),
+              label: 'Beacons',
+            ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
             label: 'Reportes',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Configuración',
           ),

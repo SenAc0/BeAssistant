@@ -17,8 +17,6 @@ from fastapi import Query
 
 
 #models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
-
-
 #models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
 
 ##############################

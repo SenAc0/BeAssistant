@@ -13,10 +13,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Payload to register a new user."""
     password: str
-
+    is_admin: bool = False
+    
 class User(UserBase):
     """User model returned by the API."""
     id: int
+    is_admin: bool
     model_config = {"from_attributes": True}
 
 
