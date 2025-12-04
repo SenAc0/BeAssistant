@@ -370,7 +370,8 @@ def create_beacon(db: Session, beacon: BeaconCreate):
         id=beacon.id,
         major=beacon.major,
         minor=beacon.minor,
-        location=beacon.location
+        location=beacon.location,
+        name=beacon.name
     )
     db.add(db_beacon)
     db.commit()
