@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 
 class BeaconPage extends StatefulWidget {
   const BeaconPage({super.key});
@@ -8,28 +9,42 @@ class BeaconPage extends StatefulWidget {
 }
 
 class _BeaconPageState extends State<BeaconPage> {
-  List<Map<String, dynamic>> beacons = [
-    {
-      "name": "Beacon A1-1",
-      "location": "Oficina 2",
-    },
-    {
-      "name": "Beacon B3-3",
-      "location": "Sala de juntas 4",
-    },
-    {
-      "name": "Beacon B3-4",
-      "location": "Sala de juntas 4",
-    },
-    {
-      "name": "Beacon F2-3",
-      "location": "TM 3-1",
-    },
-    {
-      "name": "Beacon A6-6",
-      "location": "A-313",
-    },
-  ];
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> beacons = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBeacons();
+  }
+
+  Future<void> _loadBeacons() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final data = await _apiService.getBeacons();
+      setState(() {
+        beacons = List<Map<String, dynamic>>.from(data.map((item) => {
+          "name": item["id"] ?? "Sin nombre",
+          "location": item["ubicacion"] ?? item["location"] ?? "",
+        }));
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error al cargar beacons: $e");
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al cargar los beacons")),
+        );
+      }
+    }
+  }
 
   Future<bool> _confirmDelete() async {
     return await showDialog(
@@ -95,14 +110,18 @@ class _BeaconPageState extends State<BeaconPage> {
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/addBeacon');
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/addBeacon');
+          // Recargar la lista después de agregar un beacon
+          _loadBeacons();
         },
         elevation: 6,
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -120,7 +139,14 @@ class _BeaconPageState extends State<BeaconPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: beacons.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No hay beacons disponibles",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
               itemCount: beacons.length,
               itemBuilder: (context, index) {
                 final beacon = beacons[index];
@@ -128,7 +154,7 @@ class _BeaconPageState extends State<BeaconPage> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Dismissible(
-                    key: UniqueKey(),
+                    key: Key(beacon["id"].toString()),
                     direction: DismissDirection.endToStart,
                     confirmDismiss: (direction) async {
                       final confirmar = await _confirmDelete();
