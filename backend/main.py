@@ -16,10 +16,10 @@ from fastapi import Query
 # ESTO ES TEMPORAL, DEBERIAMOS USAR ALEMBIC PARA MIGRACIONES
 
 
-# models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
+#models.Base.metadata.drop_all(bind=engine) # Descomentar para borrar todas las tablas (solo en desarrollo)
 
 
-models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
+#models.Base.metadata.create_all(bind=engine) # Crear tablas según modelos definidos (solo en desarrollo)
 
 ##############################
 
@@ -201,6 +201,19 @@ def add_attendance(payload: schemas.AttendanceAssign,
 def list_attendance_for_meeting(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
     """Lista todas las asistencias registradas para la reunión indicada."""
     return crud.list_attendance_for_meeting(db, meeting_id=meeting_id)
+
+
+
+@app.get("/attendance/meeting_named_user/{meeting_id}", response_model=List[schemas.AttendanceWithUser])
+def list_attendance_for_meeting_named_user(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Lista todas las asistencias registradas para la reunión indicada, incluyendo el nombre de usuario.
+
+    Esto permite al frontend obtener directamente la lista con `user_name` sin tener que solicitar
+    todos los usuarios por separado.
+    """
+    return crud.list_attendance_for_meeting_with_name_user(db, meeting_id=meeting_id)
+
+
 
 @app.get("/attendance/my/{meeting_id}", response_model=schemas.Attendance)
 def get_my_attendance(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):

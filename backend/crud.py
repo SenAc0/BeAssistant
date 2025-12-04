@@ -169,6 +169,26 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
     db.add(db_meeting)
     db.commit()
     db.refresh(db_meeting)
+    # Si el creador/coordinador fue pasado, asegúrese de que exista una fila de Attendance
+    # con status 'absent' para indicar que está invitado pero aún no confirmó.
+    if coordinator_id is not None:
+        try:
+            existing_att = (
+                db.query(Attendance)
+                .filter(Attendance.user_id == coordinator_id, Attendance.meeting_id == db_meeting.id)
+                .first()
+            )
+            if not existing_att:
+                # Verificar que el usuario existe antes de crear la asistencia
+                user_obj = db.query(User).filter(User.id == coordinator_id).first()
+                if user_obj:
+                    att = Attendance(user_id=coordinator_id, meeting_id=db_meeting.id, status='absent')
+                    db.add(att)
+                    db.commit()
+                    db.refresh(att)
+        except Exception:
+            # No queremos que la creación de la asistencia bloquee la creación de la reunión.
+            db.rollback()
     # convert for response
     _convert_meeting_to_chile(db_meeting)
     return db_meeting
@@ -306,6 +326,29 @@ def list_attendance_for_meeting(db: Session, meeting_id: int):
 
 
 
+def list_attendance_for_meeting_with_name_user(db: Session, meeting_id: int):
+    """Return all attendance rows for a given meeting id and the users names."""
+    # Query returns tuples (Attendance, user_name). Convert to list of dicts
+    rows = (
+        db.query(Attendance, User.name.label("user_name"))
+        .join(User, Attendance.user_id == User.id)
+        .filter(Attendance.meeting_id == meeting_id)
+        .all()
+    )
+
+    result = []
+    for att, user_name in rows:
+        result.append({
+            "id": att.id,
+            "user_id": att.user_id,
+            "meeting_id": att.meeting_id,
+            "status": att.status,
+            "marked_at": att.marked_at,
+            "user_name": user_name,
+        })
+
+    return result
+
 
 
 def get_attendance_for_user(db: Session, user_id: int, meeting_id: int):
@@ -410,11 +453,12 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
     late_count = attendance_qs.filter(Attendance.status == "late").count()
     absent_count = attendance_qs.filter(Attendance.status == "absent").count()
 
-    asistentes_totales = present_count + late_count
+    asistentes_totales = present_count #+ late_count # considerar solo present como asistentes, no late
 
     if invitados_totales > 0:
         porcentaje_asistencias = (asistentes_totales / invitados_totales) * 100.0
         porcentaje_ausencias = (absent_count / invitados_totales) * 100.0
+        porcentaje_tarde = (late_count / invitados_totales) * 100.0
     else:
         porcentaje_asistencias = 0.0
         porcentaje_ausencias = 0.0
@@ -439,6 +483,7 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
         ausentes=absent_count,
         porcentaje_asistencias=porcentaje_asistencias,
         porcentaje_ausencias=porcentaje_ausencias,
+        porcentaje_tarde=porcentaje_tarde,
         # Campos * quedan sin lógica aún
         cantidad_asistencias=None,
         cantidad_reuniones=None,
@@ -464,21 +509,23 @@ def generate_general_report(db: Session, user_id: int):
         return {
             "cantidad_asistencias": 0,
             "cantidad_reuniones": 0,
+            "cantidad_atrasados": 0,
             "porcentaje_asistencias": 0.0,
             "porcentaje_ausencias": 0.0,
-            "porcentaje_justificaciones": 0.0,
+            "porcentaje_atrasados": 0.0,
         }
 
     asistencias = attendance_qs.filter(Attendance.status == "present").count()
     ausencias = attendance_qs.filter(Attendance.status == "absent").count()
-    justificaciones = attendance_qs.filter(Attendance.status == "late").count()
+    atrasados = attendance_qs.filter(Attendance.status == "late").count()
 
     return {
         "cantidad_asistencias": asistencias,
         "cantidad_reuniones": total_reuniones,
+        "cantidad_atrasados": atrasados,
         "porcentaje_asistencias": (asistencias / total_reuniones) * 100,
         "porcentaje_ausencias": (ausencias / total_reuniones) * 100,
-        "porcentaje_justificaciones": (justificaciones / total_reuniones) * 100,
+        "porcentaje_atrasados": (atrasados / total_reuniones) * 100,
     }
 
 

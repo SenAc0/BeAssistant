@@ -246,14 +246,13 @@ class _HistorialState extends State<Historial> {
                             "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
                         asistencia: asistencia,
                         onTap: mostrarSoloCoordinador ? () {
-                          
-                           Navigator.push(
-                             context,
-                             MaterialPageRoute(
-                               builder: (_) => ReporteReunion(),
-                             ),
-                           );
-                         } : null, 
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
+                            ),
+                          );
+                        } : null, 
                       );
                     }),
                     const SizedBox(height: 20),
@@ -284,7 +283,7 @@ class _HistorialState extends State<Historial> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ReporteReunion(),
+                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
                             ),
                           );
                         } : null,
@@ -318,7 +317,7 @@ class _HistorialState extends State<Historial> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ReporteReunion(),
+                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
                             ),
                           );
                         } : null,

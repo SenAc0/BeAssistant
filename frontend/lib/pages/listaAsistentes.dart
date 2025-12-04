@@ -1,32 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/api_service.dart';
 
 class ListaAsistentes extends StatefulWidget {
-  const ListaAsistentes({super.key});
+  final int? meetingId;
+  const ListaAsistentes({super.key, this.meetingId});
 
   @override
   State<ListaAsistentes> createState() => _ListaAsistentesState();
 }
 
 class _ListaAsistentesState extends State<ListaAsistentes> {
+  final ApiService _api = ApiService();
 
-
-  final List<Map<String, String>> _asistentes = [
-    {"nombre": "Juan", "estado": "Presente"},
-    {"nombre": "Ana", "estado": "Ausente"},
-    {"nombre": "Luis", "estado": "Atrasado"},
-    {"nombre": "Marta", "estado": "Presente"},
-    {"nombre": "Carlos", "estado": "Ausente"},
-    {"nombre": "Matias", "estado": "Ausente"},
-    {"nombre": "Julia", "estado": "Ausente"},
-  ];
-
+  List<Map<String, String>> _asistentes = [];
   List<Map<String, String>> _filteredAsistentes = [];
   String _selectedFilter = "";
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredAsistentes = [];
+    _loadAttendances();
+  }
+
+  Future<void> _loadAttendances() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      if (widget.meetingId == null) {
+        setState(() {
+          _asistentes = [];
+          _filteredAsistentes = [];
+          _loading = false;
+        });
+        return;
+      }
+
+      final attendances = await _api.getAttendanceForMeetingWithUserName(widget.meetingId!);
+
+      final List<Map<String, String>> built = [];
+      for (var a in attendances) {
+        final status = (a['status'] as String?) ?? '';
+        String estadoLabel;
+        switch (status) {
+          case 'present':
+            estadoLabel = 'Presente';
+            break;
+          case 'absent':
+            estadoLabel = 'Ausente';
+            break;
+          case 'late':
+            estadoLabel = 'Atrasado';
+            break;
+          default:
+            estadoLabel = status.isNotEmpty ? status : 'Desconocido';
+        }
+
+        final nombre = (a['user_name'] as String?) ?? (a['user_id']?.toString() ?? 'Usuario');
+        built.add({'nombre': nombre, 'estado': estadoLabel});
+      }
+
+      setState(() {
+        _asistentes = built;
+        _filteredAsistentes = [];
+        _selectedFilter = '';
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _asistentes = [];
+        _filteredAsistentes = [];
+        _loading = false;
+      });
+      // opcional: mostrar error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cargando asistentes: $e')),
+        );
+      }
+    }
   }
 
   // Filtros
@@ -43,9 +97,7 @@ class _ListaAsistentesState extends State<ListaAsistentes> {
     // Aplicar nuevo filtro
     setState(() {
       _selectedFilter = filter;
-      _filteredAsistentes = _asistentes
-          .where((a) => a["estado"] == filter)
-          .toList();
+      _filteredAsistentes = _asistentes.where((a) => a["estado"] == filter).toList();
     });
   }
 
@@ -54,7 +106,6 @@ class _ListaAsistentesState extends State<ListaAsistentes> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         // Botones Filtro
         Card(
           elevation: 4,
@@ -88,22 +139,24 @@ class _ListaAsistentesState extends State<ListaAsistentes> {
           ),
         ),
 
-
         const SizedBox(height: 20),
 
-        // Lista 
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _filteredAsistentes.length,
-          itemBuilder: (context, index) {
-            final a = _filteredAsistentes[index];
-            return AsistenteCard(
-              nombre: a["nombre"]!,
-              estado: a["estado"]!,
-            );
-          },
-        ),
+        if (_loading) const Center(child: CircularProgressIndicator()),
+
+        // Lista
+        if (!_loading)
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _filteredAsistentes.isNotEmpty ? _filteredAsistentes.length : 0,
+            itemBuilder: (context, index) {
+              final a = _filteredAsistentes[index];
+              return AsistenteCard(
+                nombre: a["nombre"]!,
+                estado: a["estado"]!,
+              );
+            },
+          ),
       ],
     );
   }
@@ -175,7 +228,6 @@ class AsistenteCard extends StatelessWidget {
       ),
 
       child: ListTile(
-        
         leading: Container(
           width: 35,
           height: 35,
@@ -186,7 +238,6 @@ class AsistenteCard extends StatelessWidget {
           child: const Icon(Icons.person, size: 28, color: Colors.white),
         ),
 
-       
         title: Row(
           children: [
             Text(

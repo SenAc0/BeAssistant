@@ -254,6 +254,26 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
       throw Exception("Error obteniendo asistentes: ${response.body}");
     }
   }
+
+  /// Obtener la lista de asistentes de una reunión incluyendo el nombre de usuario
+  Future<List<dynamic>> getAttendanceForMeetingWithUserName(int meetingId) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/attendance/meeting_named_user/$meetingId');
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error obteniendo asistentes (con nombre): ${response.body}");
+    }
+  }
   Future<bool> markAttendance(int meetingID) async {
     final token = await getToken();
     if (token == null) return false;
@@ -351,6 +371,60 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
     } else {
       print("Error al obtener asistencias: ${response.body}");
       throw Exception("Error al obtener lista de asistencias");
+    }
+  }
+
+  Future<Map<String, dynamic>?> getReportGeneral() async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return null;
+    }
+
+    final url = Uri.parse('$baseUrl/report/general');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Reporte general obtenido: $data");
+      if (data is Map<String, dynamic>) return data;
+      return data as Map<String, dynamic>?;
+    } else {
+      print("Error al obtener reporte general: ${response.body}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getReportMeeting(int meetingID) async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return null;
+    }
+
+    final url = Uri.parse('$baseUrl/meetings/$meetingID/report');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Reporte de reunión obtenido: $data");
+      if (data is Map<String, dynamic>) return data;
+      return data as Map<String, dynamic>?;
+    } else {
+      print("Error al obtener reporte de reunión: ${response.body}");
+      return null;
     }
   }
 

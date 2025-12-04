@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/resources/app_resources.dart';
 import 'package:myapp/widgets/indicator.dart';
-
+import 'package:myapp/api_service.dart';
 
 class ReporteGeneral extends StatefulWidget {
   const ReporteGeneral({super.key});
@@ -12,6 +12,24 @@ class ReporteGeneral extends StatefulWidget {
 }
 
 class _ReporteGeneralState extends State<ReporteGeneral> {
+
+  final ApiService apiService = ApiService();
+
+  Map<String, dynamic>? reportData;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchReportData();
+  }
+
+  Future<void> fetchReportData() async {
+    final data = await apiService.getReportGeneral();
+    setState(() {
+      reportData = data;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,23 +50,27 @@ class _ReporteGeneralState extends State<ReporteGeneral> {
               Row(
                 children: [
                   
-                  Expanded(
-                    child: ReunionesAsistidasCard(
-                      cantAsistidas: 8,
-                    ),
-                  ),
+                      Expanded(
+                        child: ReunionesAsistidasCard(
+                          cantAsistidas: reportData?['cantidad_asistencias'] ?? 0,
+                        ),
+                      ),
                   SizedBox(width: 12),
                   Expanded(
-                    child: ReunionesTotalesCard(
-                      cantReuniones: 25,
-                    ),
+                        child: ReunionesTotalesCard(
+                          cantReuniones: reportData?['cantidad_reuniones'] ?? 0,
+                        ),
                   ),
                 ],
               ),
 
               SizedBox(height: 16),
 
-              const GraficoCard(),
+              GraficoCard(
+                presente: (reportData?['porcentaje_asistencias'] as num?)?.toDouble() ?? 0.0,
+                ausente: (reportData?['porcentaje_ausencias'] as num?)?.toDouble() ?? 0.0,
+                atrasado: (reportData?['porcentaje_atrasados'] as num?)?.toDouble() ?? 0.0,
+              ),
             ],
           ),
         ),
@@ -84,7 +106,7 @@ class ReunionesAsistidasCard extends StatelessWidget {
                     Text(
                       'Reuniones Asistidas',
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -133,7 +155,7 @@ class ReunionesTotalesCard extends StatelessWidget {
                     Text(
                       'Reuniones Totales',
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -160,7 +182,11 @@ class ReunionesTotalesCard extends StatelessWidget {
 
 
 class GraficoCard extends StatelessWidget {
-  const GraficoCard({super.key});
+  final double presente;
+  final double ausente;
+  final double atrasado;
+
+  const GraficoCard({super.key, required this.presente, required this.ausente, required this.atrasado});
 
   @override
   Widget build(BuildContext context) {
@@ -187,9 +213,9 @@ class GraficoCard extends StatelessWidget {
             SizedBox(
               height: 220, 
               child: PieChartSample2(
-                presente: 40,
-                ausente: 35,
-                justificado: 25,
+                presente: presente,
+                ausente: ausente,
+                atrasado: atrasado,
               ),
             ),
           ],
@@ -202,13 +228,13 @@ class GraficoCard extends StatelessWidget {
 class PieChartSample2 extends StatefulWidget {
   final double presente;
   final double ausente;
-  final double justificado;
+  final double atrasado;
 
   const PieChartSample2({
     super.key,
     required this.presente,
     required this.ausente,
-    required this.justificado,
+    required this.atrasado,
   });
 
   @override
@@ -294,10 +320,10 @@ class PieChart2State extends State<PieChartSample2> {
 
       switch (i) {
         case 0:
-          return PieChartSectionData(
-            color: AppColors.contentColorGreen,
-            value: widget.presente,
-            title: '${widget.presente}%',
+            return PieChartSectionData(
+              color: AppColors.contentColorGreen,
+              value: widget.presente,
+              title: '${widget.presente.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -308,10 +334,10 @@ class PieChart2State extends State<PieChartSample2> {
           );
 
         case 1:
-          return PieChartSectionData(
-            color: AppColors.contentColorRosado,
-            value: widget.ausente,
-            title: '${widget.ausente}%',
+            return PieChartSectionData(
+              color: AppColors.contentColorRosado,
+              value: widget.ausente,
+              title: '${widget.ausente.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -322,10 +348,10 @@ class PieChart2State extends State<PieChartSample2> {
           );
 
         case 2:
-          return PieChartSectionData(
-            color:Color(0xFFFF9800),
-            value: widget.justificado,
-            title: '${widget.justificado}%',
+            return PieChartSectionData(
+              color: Color(0xFFFF9800),
+              value: widget.atrasado,
+              title: '${widget.atrasado.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,

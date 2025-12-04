@@ -67,9 +67,10 @@ class MeetingDetail(MeetingBase):
 class GeneralReport(BaseModel):
     cantidad_asistencias: int
     cantidad_reuniones: int
+    cantidad_atrasados: int
     porcentaje_asistencias: float
     porcentaje_ausencias: float
-    porcentaje_justificaciones: float
+    porcentaje_atrasados: float
 
 
 # ========= Attendance =========
@@ -99,6 +100,13 @@ class Attendance(BaseModel):
     status: str
     marked_at: datetime
     
+    model_config = {"from_attributes": True}
+
+
+class AttendanceWithUser(Attendance):
+    """Attendance record including the user's name to simplify frontend lookups."""
+    user_name: str
+
     model_config = {"from_attributes": True}
 
 
@@ -139,6 +147,7 @@ class MeetingReport(BaseModel):
     ausentes: int
     porcentaje_asistencias: float
     porcentaje_ausencias: float
+    porcentaje_tarde: float
 
     # Campos marcados con * (definidos pero sin lógica todavía)
     cantidad_asistencias: int | None = None

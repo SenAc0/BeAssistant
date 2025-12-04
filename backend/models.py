@@ -102,8 +102,9 @@ class MeetingReport(Base):
     llegadas_tarde = Column(Integer, nullable=False, default=0)      # late
     ausentes = Column(Integer, nullable=False, default=0)            # absent
 
-    porcentaje_asistencias = Column(Integer, nullable=False, default=0)
-    porcentaje_ausencias = Column(Integer, nullable=False, default=0)
+    porcentaje_asistencias = Column(Float, nullable=False, default=0.0)
+    porcentaje_ausencias = Column(Float, nullable=False, default=0.0)
+    porcentaje_tarde = Column(Float, nullable=False, default=0.0)
 
     # Campos marcados con * (definir pero dejar sin uso por ahora)
     cantidad_asistencias = Column(Integer, nullable=True)

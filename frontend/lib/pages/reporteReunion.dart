@@ -3,15 +3,42 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/resources/app_resources.dart';
 import 'package:myapp/widgets/indicator.dart';
 import 'package:myapp/pages/listaAsistentes.dart';
-
+import 'package:myapp/api_service.dart';
 class ReporteReunion extends StatefulWidget {
-  const ReporteReunion({super.key});
+  final int? meetingId;
+  const ReporteReunion({super.key, this.meetingId});
 
   @override
   State<ReporteReunion> createState() => _ReporteReunionState();
 }
 
 class _ReporteReunionState extends State<ReporteReunion> {
+  final ApiService apiService = ApiService();
+  Map<String, dynamic>? reportData;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() => loading = true);
+    if (widget.meetingId == null) {
+      setState(() {
+        reportData = null;
+        loading = false;
+      });
+      return;
+    }
+    final data = await apiService.getReportMeeting(widget.meetingId!);
+    setState(() {
+      reportData = data;
+      loading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,32 +46,35 @@ class _ReporteReunionState extends State<ReporteReunion> {
         title: const Text('Reporte de Reunión'),
         backgroundColor: Color(0xFFAF79F2),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: const [
-            NombreCard(
-              fecha: "28/11/2025",
-              nombre: "Reunión de Proyecto",
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  NombreCard(
+                    fecha: reportData?['fecha'] ?? '',
+                    nombre: reportData?['nombre_reunion'] ?? '',
+                  ),
+                  const SizedBox(height: 16),
+                  AsistenciasCard(asistenciasTotales: reportData?['invitados_totales'] ?? 0),
+                  const SizedBox(height: 16),
+                  CantPAACard(
+                    presentes: reportData?['asistentes_totales'] ?? 0,
+                    ausentes: reportData?['ausentes'] ?? 0,
+                    atrasados: reportData?['llegadas_tarde'] ?? 0,
+                  ),
+                  const SizedBox(height: 16),
+                  GraficoCard(
+                    presente: (reportData?['porcentaje_asistencias'] as num?)?.toDouble() ?? 0.0,
+                    ausente: (reportData?['porcentaje_ausencias'] as num?)?.toDouble() ?? 0.0,
+                    atrasado: (reportData?['porcentaje_tarde'] as num?)?.toDouble() ?? 0.0,
+                  ),
+                  const SizedBox(height: 16),
+                  ListaAsistentes(meetingId: widget.meetingId),
+                ],
+              ),
             ),
-            SizedBox(height: 16),
-            AsistenciasCard(asistenciasTotales: 100),
-            SizedBox(height: 16),
-           
-            CantPAACard(
-              presentes: 8,
-              ausentes: 25,
-              atrasados: 2,
-            ),
-            SizedBox(height: 16),
-            GraficoCard(),
-            SizedBox(height: 16),
-            ListaAsistentes()
-           
-
-          ],
-        ),
-      ),
     );
   }
 }
@@ -146,7 +176,11 @@ class AsistenciasCard extends StatelessWidget {
 
 
 class GraficoCard extends StatelessWidget {
-  const GraficoCard({super.key});
+  final double presente;
+  final double ausente;
+  final double atrasado;
+
+  const GraficoCard({super.key, required this.presente, required this.ausente, required this.atrasado});
 
   @override
   Widget build(BuildContext context) {
@@ -172,9 +206,9 @@ class GraficoCard extends StatelessWidget {
             SizedBox(
               height: 230, 
               child: PieChartSample2(
-                presente: 10,
-                ausente: 65,
-                atrasado: 25,
+                presente: presente,
+                ausente: ausente,
+                atrasado: atrasado,
               ),
             ),
           ],
@@ -282,7 +316,7 @@ class PieChart2State extends State<PieChartSample2> {
           return PieChartSectionData(
             color: AppColors.contentColorGreen,
             value: widget.presente,
-            title: '${widget.presente}%',
+            title: '${widget.presente.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -296,7 +330,7 @@ class PieChart2State extends State<PieChartSample2> {
           return PieChartSectionData(
             color: AppColors.contentColorRosado,
             value: widget.ausente,
-            title: '${widget.ausente}%',
+            title: '${widget.ausente.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
@@ -310,7 +344,7 @@ class PieChart2State extends State<PieChartSample2> {
           return PieChartSectionData(
             color: const Color(0xFFFF9800),
             value: widget.atrasado,
-            title: '${widget.atrasado}%',
+            title: '${widget.atrasado.toStringAsFixed(1)}%',
             radius: radius,
             titleStyle: TextStyle(
               fontSize: fontSize,
