@@ -80,7 +80,7 @@ class Beacon(Base):
     minor = Column(Integer, index=True)
     location = Column(String, index=True)
     last_used = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    name = Column(String, index=True, nullable=False)
+    name = Column(String, index=True, nullable=True)
     # Relationships
     meetings = relationship("Meeting", back_populates="beacon")
 

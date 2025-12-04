@@ -116,11 +116,15 @@ class BeaconBase(BaseModel):
     major: int
     minor: int
     location: str
-    name: str
+    name: Optional[str] = None
 
-class BeaconCreate(BeaconBase):
+class BeaconCreate(BaseModel):
     """Payload to register a new beacon."""
     id: str
+    major: int
+    minor: int
+    location: str
+    name: Optional[str] = None
 
 class BeaconUpdate(BaseModel):
     major: int | None = None
