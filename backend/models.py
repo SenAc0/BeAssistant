@@ -81,9 +81,13 @@ class Beacon(Base):
     minor = Column(Integer, index=True)
     location = Column(String, index=True)
     last_used = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
+    name = Column(String, index=True, nullable=False)
     # Relationships
     meetings = relationship("Meeting", back_populates="beacon")
+
+    __table_args__ = (
+        UniqueConstraint("id", "name", name="uq_beacon_id_name"),
+    )
 
 
 class MeetingReport(Base):

@@ -118,6 +118,7 @@ class BeaconBase(BaseModel):
     major: int
     minor: int
     location: str
+    name: str
 
 class BeaconCreate(BeaconBase):
     """Payload to register a new beacon."""
@@ -127,6 +128,7 @@ class BeaconUpdate(BaseModel):
     major: int | None = None
     minor: int | None = None
     location: str | None = None
+    name: str | None = None
 
 class Beacon(BeaconBase):
     """Beacon resource as returned by the API."""
