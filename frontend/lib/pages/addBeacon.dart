@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 
 class AddBeaconPage extends StatefulWidget {
   const AddBeaconPage({super.key});
@@ -8,12 +9,68 @@ class AddBeaconPage extends StatefulWidget {
 }
 
 class _AddBeaconPageState extends State<AddBeaconPage> {
+  final ApiService _apiService = ApiService();
+  bool _isSaving = false;
+
   // Controladores
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController ubicacionController = TextEditingController();
   final TextEditingController idController = TextEditingController();
   final TextEditingController minorController = TextEditingController();
   final TextEditingController majorController = TextEditingController();
+
+  Future<void> _guardarBeacon() async {
+    // Validar campos
+    if (idController.text.isEmpty ||
+        ubicacionController.text.isEmpty ||
+        majorController.text.isEmpty ||
+        minorController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Por favor completa todos los campos obligatorios")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final success = await _apiService.addBeacon(
+        ubicacionController.text,
+        idController.text,
+        majorController.text,
+        minorController.text,
+        nombreController.text,
+      );
+
+      if (success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Beacon guardado exitosamente")),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Error al guardar el beacon")),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error al guardar beacon: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,14 +196,20 @@ class _AddBeaconPageState extends State<AddBeaconPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: () {
-                        // Aquí en backend
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        "Guardar",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
+                      onPressed: _isSaving ? null : _guardarBeacon,
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "Guardar",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),

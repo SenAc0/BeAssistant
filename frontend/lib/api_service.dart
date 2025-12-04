@@ -349,6 +349,69 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
       throw Exception("Error al obtener lista de beacons");
     }
   }
+
+  // Crear beacon a la bd
+  Future<bool> addBeacon(String location, String id, String major, String minor, String name) async {
+    final token = await getToken();
+
+    if (token == null) {
+      throw Exception("No autorizado: falta token");
+    }
+    
+    final body = {
+      "id": id,
+      "name":name,
+      "location": location,
+      "major": major,
+      "minor": minor
+    };
+
+    final url = Uri.parse('$baseUrl/beacons');
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print("Beacon creado exitosamente");
+      return true;
+    } else {
+      print("Error al crear beacon: ${response.statusCode} -> ${response.body}");
+      return false;
+    }
+  }
+  //Eliminar beacon
+  Future<bool> deleteBeacon(String id) async {
+    final token = await getToken();
+    if (token == null) {
+      throw Exception("No autorizado: falta token");
+    }
+    
+    // Usar interpolación para incluir el id en la URL
+    final url = Uri.parse('$baseUrl/beacons/$id');
+
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      print("Beacon eliminado exitosamente");
+      return true;
+    } else {
+      print("Error al eliminar beacon: ${response.statusCode} -> ${response.body}");
+      return false;
+    }
+  }
+
   // obtener todas las asistencias del usuario a sus reuniones
   Future<List<dynamic>> getMyAttendances() async {
     final token = await getToken();
