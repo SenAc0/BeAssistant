@@ -44,7 +44,18 @@ class _ReporteReunionState extends State<ReporteReunion> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reporte de Reunión'),
-        backgroundColor: Color(0xFFAF79F2),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

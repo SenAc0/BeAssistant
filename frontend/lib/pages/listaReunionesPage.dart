@@ -340,6 +340,7 @@ class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
           Navigator.pushNamed(context, '/crearReunion1');
         },
         elevation: 6, 
+        backgroundColor: Color(0xFFB897E6),
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),

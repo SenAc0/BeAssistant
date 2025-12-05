@@ -144,11 +144,10 @@ class _PaginaReunionState extends State<PaginaReunion> {
               ],
             ),
           ),
+          //title: const Text('Cargando...'),
         ),
-          title: const Text('Cargando...'),
-        ),
-        body: Center(child: CircularProgressIndicator()),
-      );
+        //body: Center(child: CircularProgressIndicator()),
+      ));
     }
 
     if (_error != null) {
@@ -207,7 +206,6 @@ class _PaginaReunionState extends State<PaginaReunion> {
               ),
             const SizedBox(height: 12),
 
-            // Descripción como card independiente (si existe)
             if (_reunion?['description'] != null && _reunion!['description'].isNotEmpty)
               DescripcionCard(descripcion: _reunion?['description'] ?? ''),
 
@@ -223,27 +221,53 @@ class _PaginaReunionState extends State<PaginaReunion> {
               isChecking: _isCheckingAttendance,
               onCheckAttendance: markAttendance,
             ),
+
+            const SizedBox(height: 20),
+
+            // Botón coordinador al final (si es coordinador)
+            if (_isCoordinator)
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            CrearReunion3(meetingId: widget.meetingID),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFB897E6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFAF79F2).withOpacity(0.4),
+                          blurRadius: 2,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.person_add,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
-    
-      //Boton coordinador
-      floatingActionButton: _isCoordinator
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          CrearReunion3(meetingId: widget.meetingID),
-                    ),
-                );
-              },
-              //backgroundColor: Color(0xFFA159FF),
-              shape: const CircleBorder(),
-              child: const Icon(Icons.person_add),
-            )
-          : null,
+
+      // Remover floatingActionButton
+      floatingActionButton: null,
     );
     
   }

@@ -160,35 +160,38 @@ class _BeaconPageState extends State<BeaconPage> {
                     direction: DismissDirection.endToStart,
                     confirmDismiss: (direction) async {
                       final confirmar = await _confirmDelete();
-                      if (confirmar) {
-                        try {
-                          final success = await _apiService.deleteBeacon(beacon["id"]);
-                          if (success) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Beacon eliminado exitosamente")),
-                              );
-                            }
-                            return true; 
-                          } else {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Error al eliminar el beacon")),
-                              );
-                            }
-                            return false; 
-                          }
-                        } catch (e) {
-                          print("Error al eliminar beacon: $e");
+                      if (!confirmar) return false;
+
+                      try {
+                        final success = await _apiService.deleteBeacon(beacon["id"]);
+                        if (!success) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Error: $e")),
+                              const SnackBar(content: Text("Error al eliminar el beacon")),
                             );
                           }
                           return false;
                         }
+
+                        // eliminar del data source para que no queden "gaps"
+                        if (mounted) {
+                          setState(() {
+                            beacons.removeWhere((b) => b["id"] == beacon["id"]);
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Beacon eliminado exitosamente")),
+                          );
+                        }
+
+                        return true;
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error: $e")),
+                          );
+                        }
+                        return false;
                       }
-                      return false;
                     },
                     background: ClipRRect(
                       borderRadius: BorderRadius.circular(12),

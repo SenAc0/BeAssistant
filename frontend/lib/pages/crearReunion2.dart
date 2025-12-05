@@ -206,19 +206,34 @@ class _CrearReunion2State extends State<CrearReunion2> {
         }
 
         final beacons = snapshot.data!;
+        final screenHeight = MediaQuery.of(context).size.height;
 
-        return Column(
-          children: beacons.map((b) {
-            final id = b["id"];
-            final location = b["location"] ?? "Sin sala";
-            final activo = true; // Puedes cambiar esto según tu backend
+        return Container(
+          height: screenHeight * 0.5, // 50% de la pantalla
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: ListView.builder(
+              //padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: beacons.length,
+              itemBuilder: (context, index) {
+                final b = beacons[index];
+                final id = b["id"];
+                final location = b["location"] ?? "Sin sala";
+                final activo = true;
 
-            return _salaCard(
-              id, // visible como título
-              activo ? "Activo" : "Inactivo",
-              location,
-            );
-          }).toList(),
+                return _salaCard(
+                  id,
+                  activo ? "Activo" : "Inactivo",
+                  location,
+                );
+                
+              },
+            ),
+          ),
         );
       },
     );

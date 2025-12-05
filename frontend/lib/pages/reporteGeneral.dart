@@ -11,7 +11,7 @@ class ReporteGeneral extends StatefulWidget {
   State<ReporteGeneral> createState() => _ReporteGeneralState();
 }
 
-class _ReporteGeneralState extends State<ReporteGeneral> {
+class _ReporteGeneralState extends State<ReporteGeneral> with WidgetsBindingObserver {
 
   final ApiService apiService = ApiService();
 
@@ -20,7 +20,21 @@ class _ReporteGeneralState extends State<ReporteGeneral> {
   @override
   void initState() {
     super.initState();
-    fetchReportData();
+    WidgetsBinding.instance.addObserver(this);
+    fetchReportData(); 
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      fetchReportData(); // Recargar al volver a la app
+    }
   }
 
   Future<void> fetchReportData() async {
@@ -34,44 +48,58 @@ class _ReporteGeneralState extends State<ReporteGeneral> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Reporte de Personal'),
-        backgroundColor: Color(0xFFAF79F2),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF8C3CE6),
+                Color(0xFFA159FF),
+              ],
+            ),
+          ),
+        ),
       ),
 
-      body: SingleChildScrollView(
-        
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      body: RefreshIndicator(
+        color: const Color(0xFFAF79F2),
+        onRefresh: fetchReportData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-
-              Row(
-                children: [
-                  
-                      Expanded(
-                        child: ReunionesAsistidasCard(
-                          cantAsistidas: reportData?['cantidad_asistencias'] ?? 0,
-                        ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ReunionesAsistidasCard(
+                        cantAsistidas: reportData?['cantidad_asistencias'] ?? 0,
                       ),
-                  SizedBox(width: 12),
-                  Expanded(
-                        child: ReunionesTotalesCard(
-                          cantReuniones: reportData?['cantidad_reuniones'] ?? 0,
-                        ),
-                  ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ReunionesTotalesCard(
+                        cantReuniones: reportData?['cantidad_reuniones'] ?? 0,
+                      ),
+                    ),
+                  ],
+                ),
 
-              SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              GraficoCard(
-                presente: (reportData?['porcentaje_asistencias'] as num?)?.toDouble() ?? 0.0,
-                ausente: (reportData?['porcentaje_ausencias'] as num?)?.toDouble() ?? 0.0,
-                atrasado: (reportData?['porcentaje_atrasados'] as num?)?.toDouble() ?? 0.0,
-              ),
-            ],
+                GraficoCard(
+                  presente: (reportData?['porcentaje_asistencias'] as num?)?.toDouble() ?? 0.0,
+                  ausente: (reportData?['porcentaje_ausencias'] as num?)?.toDouble() ?? 0.0,
+                  atrasado: (reportData?['porcentaje_atrasados'] as num?)?.toDouble() ?? 0.0,
+                ),
+              ],
+            ),
           ),
         ),
       ),

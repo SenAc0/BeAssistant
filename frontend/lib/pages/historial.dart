@@ -9,7 +9,7 @@ class Historial extends StatefulWidget {
   
 }
 
-class _HistorialState extends State<Historial> {
+class _HistorialState extends State<Historial> with WidgetsBindingObserver {
   List<dynamic> reunionesSemana = [];
   List<dynamic> reunionesMesPasado = [];
   List<dynamic> reunionesAntiguas = [];
@@ -20,7 +20,21 @@ class _HistorialState extends State<Historial> {
   @override
   void initState() {
     super.initState();
-    cargarHistorial();
+    WidgetsBinding.instance.addObserver(this);
+    cargarHistorial(); // Auto-refresh al abrir
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      cargarHistorial(); // Recargar al volver a la app
+    }
   }
 
   Future<void> cargarHistorial() async {
@@ -207,132 +221,137 @@ class _HistorialState extends State<Historial> {
       ),
       body: cargando
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: ListView(
-                children: [
-                  CoordinadorCard(
-                    value: mostrarSoloCoordinador,
-                    onChanged: (value) {
-                      setState(() {
-                        mostrarSoloCoordinador = value;
-                      });
-                      cargarHistorial();  
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-
-                  // Esta semana
-                  if (reunionesSemana.isNotEmpty) ...[
-                    Text("Esta semana",
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    ...reunionesSemana.map((m) {
-                      final inicio = DateTime.parse(m['start_time']).toLocal();
-                      final fin = m['end_time'] != null
-                          ? DateTime.parse(m['end_time']).toLocal()
-                          : null;
-
-                      final asistencia = m['_asistencia_label'] ?? "Ausente";
-
-                      return ListaCard(
-                        nombre: m["title"] ?? "Reunión sin título",
-                        fecha: formatearFechaTexto(inicio),
-                        hora:
-                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
-                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
-                        asistencia: asistencia,
-                        onTap: mostrarSoloCoordinador ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
-                            ),
-                          );
-                        } : null, 
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Mes pasado (7-30 días)
-                  if (reunionesMesPasado.isNotEmpty) ...[
-                    Text("Mes pasado",
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    ...reunionesMesPasado.map((m) {
-                      final inicio = DateTime.parse(m['start_time']).toLocal();
-                      final fin = m['end_time'] != null
-                          ? DateTime.parse(m['end_time']).toLocal()
-                          : null;
-
-                      final asistencia = m['_asistencia_label'] ?? "Ausente";
-
-                      return ListaCard(
-                        nombre: m["title"] ?? "Reunión sin título",
-                        fecha: formatearFechaTexto(inicio),
-                        hora:
-                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
-                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
-                        asistencia: asistencia,
-                        onTap: mostrarSoloCoordinador ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
-                            ),
-                          );
-                        } : null,
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Antiguas (>30 días)
-                  if (reunionesAntiguas.isNotEmpty) ...[
-                    Text("Antiguas",
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    ...reunionesAntiguas.map((m) {
-                      final inicio = DateTime.parse(m['start_time']).toLocal();
-                      final fin = m['end_time'] != null
-                          ? DateTime.parse(m['end_time']).toLocal()
-                          : null;
-
-                      final asistencia = m['_asistencia_label'] ?? "Ausente";
-
-                      return ListaCard(
-                        nombre: m["title"] ?? "Reunión sin título",
-                        fecha: formatearFechaTexto(inicio),
-                        hora:
-                            "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
-                            "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
-                        asistencia: asistencia,
-                        onTap: mostrarSoloCoordinador ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
-                            ),
-                          );
-                        } : null,
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Empty state if nothing
-                  if (reunionesSemana.isEmpty && reunionesMesPasado.isEmpty && reunionesAntiguas.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Center(child: Text('No hay reuniones pasadas.')),
+          : RefreshIndicator(
+              color: const Color(0xFFAF79F2),
+              onRefresh: cargarHistorial,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    CoordinadorCard(
+                      value: mostrarSoloCoordinador,
+                      onChanged: (value) {
+                        setState(() {
+                          mostrarSoloCoordinador = value;
+                        });
+                        cargarHistorial();  
+                      },
                     ),
-                ],
+
+                    const SizedBox(height: 20),
+
+
+                    // Esta semana
+                    if (reunionesSemana.isNotEmpty) ...[
+                      Text("Esta semana",
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      ...reunionesSemana.map((m) {
+                        final inicio = DateTime.parse(m['start_time']).toLocal();
+                        final fin = m['end_time'] != null
+                            ? DateTime.parse(m['end_time']).toLocal()
+                            : null;
+
+                        final asistencia = m['_asistencia_label'] ?? "Ausente";
+
+                        return ListaCard(
+                          nombre: m["title"] ?? "Reunión sin título",
+                          fecha: formatearFechaTexto(inicio),
+                          hora:
+                              "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                              "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                          asistencia: asistencia,
+                          onTap: mostrarSoloCoordinador ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
+                              ),
+                            );
+                          } : null, 
+                        );
+                      }),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Mes pasado (7-30 días)
+                    if (reunionesMesPasado.isNotEmpty) ...[
+                      Text("Mes pasado",
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      ...reunionesMesPasado.map((m) {
+                        final inicio = DateTime.parse(m['start_time']).toLocal();
+                        final fin = m['end_time'] != null
+                            ? DateTime.parse(m['end_time']).toLocal()
+                            : null;
+
+                        final asistencia = m['_asistencia_label'] ?? "Ausente";
+
+                        return ListaCard(
+                          nombre: m["title"] ?? "Reunión sin título",
+                          fecha: formatearFechaTexto(inicio),
+                          hora:
+                              "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                              "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                          asistencia: asistencia,
+                          onTap: mostrarSoloCoordinador ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
+                              ),
+                            );
+                          } : null,
+                        );
+                      }),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Antiguas (>30 días)
+                    if (reunionesAntiguas.isNotEmpty) ...[
+                      Text("Antiguas",
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      ...reunionesAntiguas.map((m) {
+                        final inicio = DateTime.parse(m['start_time']).toLocal();
+                        final fin = m['end_time'] != null
+                            ? DateTime.parse(m['end_time']).toLocal()
+                            : null;
+
+                        final asistencia = m['_asistencia_label'] ?? "Ausente";
+
+                        return ListaCard(
+                          nombre: m["title"] ?? "Reunión sin título",
+                          fecha: formatearFechaTexto(inicio),
+                          hora:
+                              "${inicio.hour.toString().padLeft(2, '0')}:${inicio.minute.toString().padLeft(2, '0')} - "
+                              "${fin != null ? "${fin.hour.toString().padLeft(2, '0')}:${fin.minute.toString().padLeft(2, '0')}" : "--"}",
+                          asistencia: asistencia,
+                          onTap: mostrarSoloCoordinador ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReporteReunion(meetingId: m['id'] ?? m['meeting_id']),
+                              ),
+                            );
+                          } : null,
+                        );
+                      }),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Empty state if nothing
+                    if (reunionesSemana.isEmpty && reunionesMesPasado.isEmpty && reunionesAntiguas.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(child: Text('No hay reuniones pasadas.')),
+                      ),
+                  ],
+                ),
               ),
             ),
     );
