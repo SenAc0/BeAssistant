@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/api_service.dart';
 
 class InfoBeacon extends StatefulWidget {
   const InfoBeacon({super.key});
@@ -8,6 +9,9 @@ class InfoBeacon extends StatefulWidget {
 }
 
 class Beacon {
+
+  final ApiService apiservice = ApiService();
+
   final String id;
   final int major;
   final int minor;
@@ -32,19 +36,23 @@ class Beacon {
 }
 
 class BeaconService {
-  Future<Beacon> fetchBeacon() async {
-    await Future.delayed(const Duration(seconds: 1)); // Simula carga
+  Future<Beacon> fetchBeacon(String beaconId) async {
+    final data = await ApiService().getBeacon(beaconId);
+    
+    if (data == null) {
+      throw Exception("No se pudo obtener el beacon");
+    }
 
     return Beacon(
-      id: "XXXXXXXXXXXXXXXXXXXX",
-      major: 12,
-      minor: 45,
-      ultimaVezUsado: "20/02/2025 13:40",
-      ubicacion: "Oficina Central",
-      colorNombre: "Azul",
-      color: const Color(0xFF4A90E2),
-      nombre: "Beacon XX-X",
-      activo: true,
+      id: data["id"] ?? "",
+      major: data["major"] ?? 0,
+      minor: data["minor"] ?? 0,
+      ultimaVezUsado: data["last_used"] ?? "",
+      ubicacion: data["location"] ?? "",
+      colorNombre: "Azul", 
+      color: const Color(0xFF4A90E2), 
+      nombre: data["name"] ?? "Sin nombre",
+      activo: true, 
     );
   }
 }
@@ -54,9 +62,10 @@ class _InfoBeaconState extends State<InfoBeacon> {
   late Future<Beacon> beaconFuture;
 
   @override
-  void initState() {
-    super.initState();
-    beaconFuture = service.fetchBeacon();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final beaconId = ModalRoute.of(context)!.settings.arguments as String;
+    beaconFuture = service.fetchBeacon(beaconId);
   }
 
   @override

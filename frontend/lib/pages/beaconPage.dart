@@ -222,7 +222,11 @@ class _BeaconPageState extends State<BeaconPage> {
                         trailing: IconButton(
                           icon: const Icon(Icons.more_vert),
                           onPressed: () {
-                            Navigator.pushNamed(context, '/infoBeacon');
+                            Navigator.pushNamed(
+                              context, 
+                              '/infoBeacon',
+                              arguments: beacon["id"], // Pasar el ID del beacon
+                            );
                           },
                         ),
                       ),

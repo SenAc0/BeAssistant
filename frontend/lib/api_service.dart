@@ -350,6 +350,32 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
     }
   }
 
+  Future<Map<String, dynamic>?> getBeacon(String id) async {
+    final token = await getToken();
+
+    if (token == null) {
+      throw Exception("No autorizado: falta token");
+    }
+
+    final url = Uri.parse('$baseUrl/beacons/$id');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Beacon obtenido: $data");
+      return data as Map<String, dynamic>;
+    } else {
+      print("Error al obtener el beacon: ${response.statusCode} -> ${response.body}");
+      return null;
+    }
+  }
+
   // Crear beacon a la bd
   Future<bool> addBeacon(String location, String id, String major, String minor, String name) async {
     final token = await getToken();
