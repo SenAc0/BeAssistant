@@ -319,6 +319,22 @@ def add_attendance(db: Session, user_id: int, meeting_id: int, status: str = "ab
     db.refresh(att)
     return att
 
+# Remove attendance record
+# Used to uninvite a user from a meeting
+def remove_attendance(db: Session, user_id: int, meeting_id: int):
+    att = (
+        db.query(Attendance)
+        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
+        .first()
+    )
+
+    if not att:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+
+    db.delete(att)
+    db.commit()
+    return {"detail": "Attendance removed"}
+
 
 def list_attendance_for_meeting(db: Session, meeting_id: int):
     """Return all attendance rows for a given meeting id."""

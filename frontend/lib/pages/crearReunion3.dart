@@ -39,6 +39,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
         future: Future.wait([
           ApiService().getUsers(),
           ApiService().getAttendanceForMeeting(widget.meetingId),
+          ApiService().getMeeting(widget.meetingId),
         ]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,8 +50,16 @@ class _CrearReunion3State extends State<CrearReunion3> {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
 
-          final usuarios = snapshot.data![0] as List<dynamic>;
+          final usuariosRaw = snapshot.data![0] as List<dynamic>;
           final asistentes = snapshot.data![1] as List<dynamic>;
+          final meeting = snapshot.data![2] as Map<String, dynamic>;
+
+          final coordinatorId = meeting["coordinator_id"];
+
+          // FILTRAR ADMIN Y COORDINADOR 
+          final usuarios = usuariosRaw
+              .where((u) => u["is_admin"] == false && u["id"] != coordinatorId)
+              .toList();
 
           // Cargar asistentes preseleccionados solo la primera vez
           if (!_cargadoInicial) {
@@ -59,6 +68,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
                 .toList();
             _cargadoInicial = true;
           }
+
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -74,39 +84,35 @@ class _CrearReunion3State extends State<CrearReunion3> {
                 const SizedBox(height: 10),
 
                 // LISTA DE USUARIOS
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.6, // 60% de la pantalla,
-                  child: Expanded(
-                    child: ListView(
-                      children: usuarios.map((user) {
-                        final id = user["id"];
-                        final yaSeleccionado = asistentesSeleccionados.contains(
-                          id,
-                        );
-                  
-                        return AgregarAsistenteCard(
-                          key: Key("user_$id"),
-                          userId: id,
-                          nombre: user["name"],
-                          correo: user["email"],
-                          inicialmenteSeleccionado: yaSeleccionado,
-                          onSelected: (id, selected) {
-                            setState(() {
-                              if (selected) {
-                                if (!asistentesSeleccionados.contains(id)) {
-                                  asistentesSeleccionados.add(id);
-                                }
-                              } else {
-                                asistentesSeleccionados.remove(id);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    
+               Container(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: ListView(
+                    children: usuarios.map((user) {
+                      final id = user["id"];
+                      final yaSeleccionado = asistentesSeleccionados.contains(
+                        id,
+                      );
+
+                      return AgregarAsistenteCard(
+                        key: Key("user_$id"),
+                        userId: id,
+                        nombre: user["name"],
+                        correo: user["email"],
+                        inicialmenteSeleccionado: yaSeleccionado,
+                        onSelected: (id, selected) {
+                          setState(() {
+                            if (selected) {
+                              asistentesSeleccionados.add(id);
+                            } else {
+                              asistentesSeleccionados.remove(id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
                 ),
+
 
                 const SizedBox(height: 10),
                 Center(child: BotonesReunion3(onConfirm: guardarAsistentes)),
@@ -118,33 +124,42 @@ class _CrearReunion3State extends State<CrearReunion3> {
     );
   }
 
-  // GUARDAR ASISTENTES
+ //GUARDAR CAMBIOS (agregar + quitar)
   Future<void> guardarAsistentes() async {
-    if (asistentesSeleccionados.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Seleccione al menos un asistente")),
-      );
-      return;
-    }
+    final asistentesBackend =
+        await ApiService().getAttendanceForMeeting(widget.meetingId);
+
+    final asistentesActuales =
+        asistentesBackend.map<int>((a) => a["user_id"] as int).toList();
 
     bool todoOK = true;
 
-    for (int userId in asistentesSeleccionados) {
-      bool ok = await ApiService().addAssistant(widget.meetingId, userId);
-      if (!ok) {
-        todoOK = false;
+    // Agregar nuevos
+    for (int id in asistentesSeleccionados) {
+      if (!asistentesActuales.contains(id)) {
+        bool ok = await ApiService().addAssistant(widget.meetingId, id);
+        if (!ok) todoOK = false;
       }
     }
 
-    if (todoOK) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Asistentes agregados correctamente")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Ocurrió un error con algunos usuarios")),
-      );
+    // Eliminar los que ya no están seleccionados
+    for (int id in asistentesActuales) {
+      if (!asistentesSeleccionados.contains(id)) {
+        bool ok = await ApiService().removeAssistant(widget.meetingId, id);
+        if (!ok) todoOK = false;
+      }
     }
+
+    // Mensajes
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          todoOK
+              ? "Asistentes actualizados correctamente"
+              : "Ocurrió un error con algunos usuarios",
+        ),
+      ),
+    );
 
     Navigator.pop(context);
   }

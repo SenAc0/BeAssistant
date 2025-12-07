@@ -194,6 +194,38 @@ def add_attendance(payload: schemas.AttendanceAssign,
 
     return crud.add_attendance(db,user_id=payload.user_id,meeting_id=payload.meeting_id,status=payload.status or "absent")
 
+# Elimina la asistencia de un usuario a una reunión
+@app.delete("/attendance")
+def remove_attendance(
+    user_id: int,
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(auth.get_current_user)
+):
+    meeting = crud.get_meeting(db, meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Solo coordinador puede eliminar
+    if meeting.coordinator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the coordinator can remove assistants")
+
+    att = (
+        db.query(models.Attendance)
+        .filter(models.Attendance.user_id == user_id,
+                models.Attendance.meeting_id == meeting_id)
+        .first()
+    )
+
+    if not att:
+      raise HTTPException(status_code=404, detail="Attendance not found")
+
+    db.delete(att)
+    db.commit()
+
+    return {"message": "Attendance removed"}
+
+
 
 @app.get("/attendance/meeting/{meeting_id}", response_model=List[schemas.Attendance])
 def list_attendance_for_meeting(meeting_id: int, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):

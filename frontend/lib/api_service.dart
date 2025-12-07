@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -235,6 +234,32 @@ Future<bool> addAssistant(int meetingId, int userId) async {
 
     return response.statusCode == 200;
   }
+/// Eliminar asistente de una reunión
+Future<bool> removeAssistant(int meetingId, int userId) async {
+    final token = await getToken();
+
+    final url = Uri.parse("$baseUrl/attendance").replace(
+      queryParameters: {
+        "user_id": userId.toString(),
+        "meeting_id": meetingId.toString(),
+      },
+    );
+
+    final response = await http.delete(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+    );
+
+    print("DELETE $url -> ${response.statusCode}");
+    print("Body: ${response.body}");
+
+    return response.statusCode == 200;
+  }
+
+
 /// Obtener la lista de asistentes de una reunión
 Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
     final token = await getToken();
