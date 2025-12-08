@@ -9,6 +9,8 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/pages/infoBeacon.dart';
 import 'package:myapp/pages/addBeacon.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:myapp/api_service.dart';
 //import 'package:flutter/widgets.dart';
 
 Future<void> main() async {
@@ -20,6 +22,20 @@ Future<void> main() async {
   // look for 'frontend/frontend/.env' and fail. Load '.env' instead.
   await dotenv.load(fileName: '.env');
   print('BASE_URL: ${dotenv.env['BASE_URL']}');
+  
+  // Inicializar OneSignal
+  final oneSignalAppId = dotenv.env['ONESIGNAL_APP_ID'];
+  if (oneSignalAppId != null && oneSignalAppId.isNotEmpty) {
+    OneSignal.initialize(oneSignalAppId);
+    
+    // Solicitar permiso para notificaciones
+    OneSignal.Notifications.requestPermission(true);
+    
+    print('OneSignal inicializado con APP_ID: $oneSignalAppId');
+  } else {
+    print('ONESIGNAL_APP_ID no encontrado en .env');
+  }
+  
   tzdata.initializeTimeZones();
   runApp(const MyApp());
 }

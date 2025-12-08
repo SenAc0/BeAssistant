@@ -57,6 +57,16 @@ def update_user(db: Session, user_id: int, new_email: str = None, new_password: 
     return user_instance
 
 
+def update_user_player_id(db: Session, user_id: int, player_id: str):
+    """Actualiza el OneSignal player_id del usuario."""
+    user_instance = db.query(User).filter(User.id == user_id).first()
+    if user_instance:
+        user_instance.onesignal_player_id = player_id
+        db.commit()
+        db.refresh(user_instance)
+    return user_instance
+
+
 
 
 

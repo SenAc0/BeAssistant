@@ -21,6 +21,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_admin = Column(Boolean, default=False) #Boleano para saber si el usuario es admin
+    onesignal_player_id = Column(String, nullable=True)  # Player ID de OneSignal para notificaciones
 
     # Relationships
     attendances = relationship("Attendance", back_populates="user", cascade="all, delete-orphan")

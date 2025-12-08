@@ -7,6 +7,34 @@ from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from typing import List
 from fastapi import Query
+import scheduler
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+import sys
+
+# Cargar variables de entorno
+load_dotenv()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("=" * 60, flush=True)
+    print("INICIANDO APLICACION", flush=True)
+    print("=" * 60, flush=True)
+    try:
+        scheduler.start_scheduler()
+        print("Scheduler iniciado correctamente", flush=True)
+    except Exception as e:
+        print(f"Error iniciando scheduler: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+    print("=" * 60, flush=True)
+    yield
+    # Shutdown
+    print("DETENIENDO APLICACION", flush=True)
+    scheduler.stop_scheduler()
+    scheduler.stop_scheduler()
 
 
 
@@ -23,7 +51,7 @@ from fastapi import Query
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Crear la aplicación
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 
 app.add_middleware(
@@ -77,6 +105,15 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/me", response_model=schemas.User)
 def get_me(current_user=Depends(auth.get_current_user)):
     return current_user
+
+
+@app.post("/users/register-device")
+def register_device(payload: schemas.RegisterDeviceRequest, db: Session = Depends(get_db), current_user=Depends(auth.get_current_user)):
+    """Registra el OneSignal player_id del dispositivo del usuario autenticado."""
+    user = crud.update_user_player_id(db, user_id=current_user.id, player_id=payload.player_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Device registered successfully", "player_id": payload.player_id}
 
 
 # ================= Users =================

@@ -542,5 +542,32 @@ Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
     }
   }
 
+  /// Registra el OneSignal player_id del dispositivo en el backend
+  Future<bool> registerDevice(String playerId) async {
+    final token = await getToken();
+    if (token == null) {
+      print("No hay token disponible.");
+      return false;
+    }
+
+    final url = Uri.parse('$baseUrl/users/register-device');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'player_id': playerId}),
+    );
+
+    if (response.statusCode == 200) {
+      print("Dispositivo registrado con player_id: $playerId");
+      return true;
+    } else {
+      print("Error al registrar dispositivo: ${response.body}");
+      return false;
+    }
+  }
+
 
 }

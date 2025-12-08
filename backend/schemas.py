@@ -19,7 +19,13 @@ class User(UserBase):
     """User model returned by the API."""
     id: int
     is_admin: bool
+    onesignal_player_id: Optional[str] = None
     model_config = {"from_attributes": True}
+
+
+class RegisterDeviceRequest(BaseModel):
+    """Payload para registrar el player_id de OneSignal del dispositivo."""
+    player_id: str
 
 
 # ========= Meetings =========

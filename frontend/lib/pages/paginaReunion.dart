@@ -86,7 +86,7 @@ class _PaginaReunionState extends State<PaginaReunion> {
   Future<void> markAttendance() async {
     if (_beaconID == null || _beaconID!.isEmpty) {
       setState(() {
-        _attendanceStatusCode = "error";
+        _attendanceStatusCode = "error_no_beacon";
       });
       return;
     }
@@ -102,12 +102,10 @@ class _PaginaReunionState extends State<PaginaReunion> {
       if (!detected) {
         setState(() {
           _isCheckingAttendance = false;
-          _attendanceStatusCode = 'absent';
+          _attendanceStatusCode = 'beacon_not_found';
         });
         return;
       }
-      // Si se detectó el beacon, llamar al backend para marcar asistencia
-
 
       final success = await _apiService.markAttendance(widget.meetingID);
       setState(() {
@@ -116,14 +114,25 @@ class _PaginaReunionState extends State<PaginaReunion> {
           _attendanceStatusCode = 'present';
           print("Asistencia marcada como presente");
         } else {
-          _attendanceStatusCode = 'error';
+          _attendanceStatusCode = 'network_error';
           print("Error al marcar asistencia para la reunión ${widget.meetingID}");
         }
       });
     } catch (e) {
       setState(() {
         _isCheckingAttendance = false;
-        _attendanceStatusCode = "error";
+        
+        final errorMsg = e.toString().toLowerCase();
+        
+        if (errorMsg.contains('bluetooth no está activado')) {
+          _attendanceStatusCode = "bluetooth_disabled";
+        } else if (errorMsg.contains('permisos') || errorMsg.contains('denegados')) {
+          _attendanceStatusCode = "permission_denied";
+        } else if (errorMsg.contains('network') || errorMsg.contains('connection') || errorMsg.contains('timeout')) {
+          _attendanceStatusCode = "network_error";
+        } else {
+          _attendanceStatusCode = "error";
+        }
       });
     }
   }
@@ -626,6 +635,26 @@ class AsistenciaCard extends StatelessWidget {
       cardColor = const Color(0xFFFF9800);
       iconData = Icons.access_time;
       statusText = "Llegaste tarde";
+    } else if (statusCode == "beacon_not_found") {
+      cardColor = const Color(0xFFFF9800);
+      iconData = Icons.location_searching;
+      statusText = "Beacon no encontrado - acércate más a la sala";
+    } else if (statusCode == "bluetooth_disabled") {
+      cardColor = const Color(0xFFFF9800);
+      iconData = Icons.bluetooth_disabled;
+      statusText = "Activa el Bluetooth para marcar asistencia";
+    } else if (statusCode == "permission_denied") {
+      cardColor = const Color(0xFFFF9800);
+      iconData = Icons.location_off;
+      statusText = "Se requieren permisos de ubicación y Bluetooth";
+    } else if (statusCode == "network_error") {
+      cardColor = const Color(0xFFB0BEC5);
+      iconData = Icons.wifi_off;
+      statusText = "Error de conexión al servidor";
+    } else if (statusCode == "error_no_beacon") {
+      cardColor = const Color(0xFFB0BEC5);
+      iconData = Icons.error;
+      statusText = "Esta reunión no tiene beacon configurado";
     } else if (statusCode == "error") {
       cardColor = const Color(0xFFB0BEC5);
       iconData = Icons.error;

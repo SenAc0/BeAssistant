@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/pages/registerPage.dart';
 import 'package:myapp/scaffold.dart';
 import '../api_service.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -165,6 +166,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
 
                         if (success) {
+                          // Registrar el dispositivo con OneSignal después del login
+                          try {
+                            final playerId = OneSignal.User.pushSubscription.id;
+                            if (playerId != null && playerId.isNotEmpty) {
+                              await ApiService().registerDevice(playerId);
+                              print('Dispositivo registrado con player_id: $playerId');
+                            }
+                          } catch (e) {
+                            print('Error registrando dispositivo: $e');
+                          }
+
                           //  Ir a la pantalla principal después de login
                           Navigator.pushReplacement(
                             context,
