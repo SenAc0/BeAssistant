@@ -26,7 +26,7 @@ def check_and_notify_upcoming_meetings():
     db: Session = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        notification_window_start = now + timedelta(minutes=NOTIFICATION_MINUTES_BEFORE)
+        notification_window_start = now + timedelta(minutes=NOTIFICATION_MINUTES_BEFORE - 1)
         notification_window_end = now + timedelta(minutes=NOTIFICATION_MINUTES_BEFORE + 1)
         
         print(f"\n{'='*60}", flush=True)
@@ -122,12 +122,12 @@ def start_scheduler():
         scheduler.add_job(
             check_and_notify_upcoming_meetings,
             'interval',
-            minutes=1,
+            seconds=30,
             id='check_meetings',
             replace_existing=True
         )
         scheduler.start()
-        print(f"Scheduler de notificaciones iniciado (revisa cada 1 minuto, notifica {NOTIFICATION_MINUTES_BEFORE} minutos antes)", flush=True)
+        print(f"Scheduler de notificaciones iniciado (revisa cada 30 segundos, notifica {NOTIFICATION_MINUTES_BEFORE} minutos antes)", flush=True)
         
         # Ejecutar inmediatamente la primera vez para testing
         print("Ejecutando primera verificacion inmediatamente", flush=True)

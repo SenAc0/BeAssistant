@@ -405,7 +405,10 @@ def create_beacon(db: Session, beacon: BeaconCreate):
     return db_beacon
 
 def get_beacons(db: Session):
-    return db.query(Beacon).all()
+    beacons = db.query(Beacon).all()
+    for b in beacons:
+        print(f"Beacon desde DB: id={b.id[:20]}..., name={b.name}, location={b.location}", flush=True)
+    return beacons
 
 def get_beacon(db: Session, beacon_id: str):
     return db.query(Beacon).filter(Beacon.id == beacon_id).first()

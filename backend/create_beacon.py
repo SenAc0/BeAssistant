@@ -58,7 +58,7 @@ def main():
             return
 
         # Crear nuevo beacon
-        beacon_in = schemas.BeaconCreate(id=args.id, major=args.major, minor=args.minor, location=args.location)
+        beacon_in = schemas.BeaconCreate(id=args.id, major=args.major, minor=args.minor, location=args.location, name="Beacon 1")
         try:
             created = crud.create_beacon(session, beacon_in)
             print("Beacon creado correctamente:")
@@ -68,6 +68,7 @@ def main():
                 'minor': created.minor,
                 'location': created.location,
                 'last_used': getattr(created, 'last_used', None),
+                'name': "Beacon 1"
             })
         except Exception as e:
             # Print traceback to help diagnose commit/constraint issues

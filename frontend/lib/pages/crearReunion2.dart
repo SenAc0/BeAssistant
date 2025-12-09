@@ -209,7 +209,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
         final screenHeight = MediaQuery.of(context).size.height;
 
         return Container(
-          height: screenHeight * 0.5, // 50% de la pantalla
+          height: screenHeight * 0.4, // 40% de la pantalla
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(12),
@@ -222,11 +222,15 @@ class _CrearReunion2State extends State<CrearReunion2> {
               itemBuilder: (context, index) {
                 final b = beacons[index];
                 final id = b["id"];
+                final name = b["name"];
+                print("Beacon $index: id=$id, name=$name");
+                final displayName = (name != null && name.isNotEmpty) ? name : id;
                 final location = b["location"] ?? "Sin sala";
                 final activo = true;
 
                 return _salaCard(
                   id,
+                  displayName,
                   activo ? "Activo" : "Inactivo",
                   location,
                 );
@@ -240,7 +244,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
   }
 
   // -------------------- TARJETA -----------------------
-  Widget _salaCard(String id, String estado, String sala) {
+  Widget _salaCard(String id, String displayName, String estado, String sala) {
     bool seleccionado = beaconSeleccionado == id;
 
     return GestureDetector(
@@ -252,7 +256,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
         margin: const EdgeInsets.only(bottom: 10),
         child: ListTile(
           title: Text(
-            id,
+            displayName,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           subtitle: Text("$estado | $sala"),

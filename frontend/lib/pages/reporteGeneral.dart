@@ -49,7 +49,7 @@ class _ReporteGeneralState extends State<ReporteGeneral> with WidgetsBindingObse
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Reporte de Personal'),
+        title: const Text('Reporte Personal'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
