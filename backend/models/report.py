@@ -1,47 +1,48 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
-
-from db import Base
+from beanie import Document, PydanticObjectId
+from pymongo import IndexModel
 
 
-class MeetingReport(Base):
-    __tablename__ = "meeting_reports"
+class MeetingReport(Document):
+    meeting_id: PydanticObjectId
 
-    id = Column(Integer, primary_key=True, index=True)
-    meeting_id = Column(Integer, ForeignKey("meetings.id", ondelete="CASCADE"), index=True, nullable=False)
-
-    fecha = Column(String, nullable=False)
-    nombre_reunion = Column(String, nullable=False)
+    fecha: str
+    nombre_reunion: str
 
     # Número total de invitados (usuarios asociados a la reunión, sin importar si asistieron)
-    invitados_totales = Column(Integer, nullable=False, default=0)
+    invitados_totales: int = 0
 
     # Asistentes clasificados por estado
-    asistentes_totales = Column(Integer, nullable=False, default=0)  # present + late
-    llegadas_tarde = Column(Integer, nullable=False, default=0)      # late
-    ausentes = Column(Integer, nullable=False, default=0)            # absent
+    asistentes_totales: int = 0  # present + late
+    llegadas_tarde: int = 0      # late
+    ausentes: int = 0            # absent
 
-    porcentaje_asistencias = Column(Float, nullable=False, default=0.0)
-    porcentaje_ausencias = Column(Float, nullable=False, default=0.0)
-    porcentaje_tarde = Column(Float, nullable=False, default=0.0)
+    porcentaje_asistencias: float = 0.0
+    porcentaje_ausencias: float = 0.0
+    porcentaje_tarde: float = 0.0
 
     # Campos marcados con * (definir pero dejar sin uso por ahora)
-    cantidad_asistencias = Column(Integer, nullable=True)
-    cantidad_reuniones = Column(Integer, nullable=True)
+    cantidad_asistencias: int | None = None
+    cantidad_reuniones: int | None = None
 
-    meeting = relationship("Meeting")
+    class Settings:
+        name = "meeting_reports"
+        indexes = [
+            # Un reporte por reunión: generate_meeting_report devuelve el existente.
+            IndexModel([("meeting_id", 1)], unique=True, name="uq_report_meeting"),
+        ]
 
 
-class GeneralReport(Base):
-    __tablename__ = "general_reports"
+class GeneralReport(Document):
+    user_id: PydanticObjectId
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    cantidad_asistencias: int = 0
+    cantidad_reuniones: int = 0
+    porcentaje_asistencias: float = 0.0
+    porcentaje_ausencias: float = 0.0
+    porcentaje_justificaciones: float = 0.0
 
-    cantidad_asistencias = Column(Integer, nullable=False, default=0)
-    cantidad_reuniones = Column(Integer, nullable=False, default=0)
-    porcentaje_asistencias = Column(Float, nullable=False, default=0.0)
-    porcentaje_ausencias = Column(Float, nullable=False, default=0.0)
-    porcentaje_justificaciones = Column(Float, nullable=False, default=0.0)
-
-    user = relationship("User")
+    class Settings:
+        name = "general_reports"
+        indexes = [
+            IndexModel([("user_id", 1)], name="ix_general_report_user"),
+        ]

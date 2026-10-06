@@ -405,7 +405,7 @@ class FilterButton extends StatelessWidget {
 class ReunionCard extends StatelessWidget {
   final String titulo;
   final String fecha;
-  final int meetingId;
+  final String meetingId;
   
   const ReunionCard({super.key, required this.titulo, required this.fecha, required this.meetingId});
 

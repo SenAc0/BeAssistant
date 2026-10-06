@@ -1,10 +1,11 @@
+from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 
 class MeetingReport(BaseModel):
     """Reporte de una reunión específica."""
-    id: int
-    meeting_id: int
+    id: PydanticObjectId
+    meeting_id: PydanticObjectId
     fecha: str
     nombre_reunion: str
     invitados_totales: int

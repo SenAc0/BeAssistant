@@ -1,13 +1,13 @@
 from datetime import datetime
-from typing import Optional
 
+from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 
 class AttendanceBase(BaseModel):
     """Base fields for marking attendance for the current user."""
-    meeting_id: int
-    status: Optional[str] = "absent"  # present | late | absent
+    meeting_id: PydanticObjectId
+    status: str | None = "absent"  # present | late | absent
 
 
 class AttendanceCreate(AttendanceBase):
@@ -17,16 +17,16 @@ class AttendanceCreate(AttendanceBase):
 
 class AttendanceAssign(BaseModel):
     """Payload to assign/update attendance for a specific user and meeting."""
-    user_id: int
-    meeting_id: int
-    status: Optional[str] = "absent"
+    user_id: PydanticObjectId
+    meeting_id: PydanticObjectId
+    status: str | None = "absent"
 
 
 class Attendance(BaseModel):
     """Attendance record returned by the API."""
-    id: int
-    user_id: int
-    meeting_id: int
+    id: PydanticObjectId
+    user_id: PydanticObjectId
+    meeting_id: PydanticObjectId
     status: str
     marked_at: datetime
 

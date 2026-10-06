@@ -1,32 +1,37 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
 
-from db import Base
+from beanie import Document, PydanticObjectId
+from pydantic import Field
+from pymongo import IndexModel
 
 
-class Meeting(Base):
-    __tablename__ = "meetings"
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    start_time = Column(DateTime(timezone=True), nullable=True)
-    end_time = Column(DateTime(timezone=True), nullable=True)
+
+class Meeting(Document):
+    title: str
+    description: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     # Nuevos campos solicitados
-    topics = Column(String, nullable=True)
-    repeat_weekly = Column(Boolean, nullable=False, default=False)
-    note = Column(String, nullable=True)
+    topics: str | None = None
+    repeat_weekly: bool = False
+    note: str | None = None
 
     # Coordinador (quien creó la reunión)
-    coordinator_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
+    coordinator_id: PydanticObjectId | None = None
 
-    # Beacon asociado por id (ya no uuid/major/minor en la reunión)
-    beacon_id = Column(String, ForeignKey("beacons.id", ondelete="SET NULL"), index=True, nullable=True)
+    # Beacon asociado por id (el id del hardware, ver models/beacon.py)
+    beacon_id: str | None = None
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: datetime = Field(default_factory=_now_utc)
 
-    # Relationships
-    attendances = relationship("Attendance", back_populates="meeting", cascade="all, delete-orphan")
-    coordinator = relationship("User", back_populates="coordinated_meetings", foreign_keys=[coordinator_id])
-    beacon = relationship("Beacon", back_populates="meetings", foreign_keys=[beacon_id])
+    class Settings:
+        name = "meetings"
+        indexes = [
+            IndexModel([("coordinator_id", 1)], name="ix_meeting_coordinator"),
+            IndexModel([("beacon_id", 1)], name="ix_meeting_beacon"),
+            IndexModel([("start_time", -1)], name="ix_meeting_start_time"),
+        ]

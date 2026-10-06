@@ -1,23 +1,29 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
-from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
 
-from db import Base
+from beanie import Document, PydanticObjectId
+from pydantic import Field
+from pymongo import IndexModel
 
 
-class Attendance(Base):
-    __tablename__ = "attendance"
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    meeting_id = Column(Integer, ForeignKey("meetings.id", ondelete="CASCADE"), index=True, nullable=False)
-    status = Column(String, nullable=False, default="absent")  # present | late | absent (default present)
-    marked_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    # Constraints
-    __table_args__ = (
-        UniqueConstraint("user_id", "meeting_id", name="uq_attendance_user_meeting"),
-    )
+class Attendance(Document):
+    user_id: PydanticObjectId
+    meeting_id: PydanticObjectId
+    status: str = "absent"  # present | late | absent
+    marked_at: datetime = Field(default_factory=_now_utc)
 
-    # Relationships
-    user = relationship("User", back_populates="attendances")
-    meeting = relationship("Meeting", back_populates="attendances")
+    class Settings:
+        name = "attendance"
+        indexes = [
+            # Reemplaza al UniqueConstraint(user_id, meeting_id) de SQL:
+            # un usuario no puede tener dos asistencias en la misma reunión.
+            IndexModel(
+                [("user_id", 1), ("meeting_id", 1)],
+                unique=True,
+                name="uq_attendance_user_meeting",
+            ),
+            IndexModel([("meeting_id", 1)], name="ix_attendance_meeting"),
+        ]

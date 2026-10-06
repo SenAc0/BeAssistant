@@ -1,15 +1,16 @@
 """Operaciones de base de datos sobre asistencias."""
 from datetime import datetime, timedelta, timezone
 
+from beanie import PydanticObjectId
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
 from models import Attendance, Meeting, User
 
 
-def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "absent") -> Attendance:
-    # Get raw meeting from DB (UTC) for time comparison
-    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+async def mark_attendance(
+    user_id: PydanticObjectId, meeting_id: PydanticObjectId, status: str = "absent"
+) -> Attendance:
+    meeting = await Meeting.get(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
@@ -19,7 +20,7 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "a
     now_utc = datetime.now(timezone.utc)
     start_utc = meeting.start_time
     end_utc = meeting.end_time
-    # treat naive DB datetimes as UTC
+    # Mongo devuelve UTC; si viniera naive, se trata como UTC
     if start_utc.tzinfo is None:
         start_utc = start_utc.replace(tzinfo=timezone.utc)
     if end_utc.tzinfo is None:
@@ -35,75 +36,68 @@ def mark_attendance(db: Session, user_id: int, meeting_id: int, status: str = "a
     half_time = start_utc + timedelta(seconds=duration_seconds / 2)
     auto_status = "present" if now_utc <= half_time else "late"
 
-    return _upsert_attendance(db, user_id=user_id, meeting_id=meeting_id, status=auto_status)
+    return await _upsert_attendance(user_id=user_id, meeting_id=meeting_id, status=auto_status)
 
 
-def add_attendance(db: Session, user_id: int, meeting_id: int, status: str = "absent") -> Attendance:
+async def add_attendance(
+    user_id: PydanticObjectId, meeting_id: PydanticObjectId, status: str = "absent"
+) -> Attendance:
     """Asigna/actualiza la asistencia sin restricciones de ventana de tiempo."""
-    # Validate user and meeting exist
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
+    if not await User.get(user_id):
         raise HTTPException(status_code=404, detail="User not found")
-    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
-    if not meeting:
+    if not await Meeting.get(meeting_id):
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    return _upsert_attendance(db, user_id=user_id, meeting_id=meeting_id, status=status)
+    return await _upsert_attendance(user_id=user_id, meeting_id=meeting_id, status=status)
 
 
-def _upsert_attendance(db: Session, user_id: int, meeting_id: int, status: str) -> Attendance:
-    existing = (
-        db.query(Attendance)
-        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
-        .first()
+async def _upsert_attendance(
+    user_id: PydanticObjectId, meeting_id: PydanticObjectId, status: str
+) -> Attendance:
+    existing = await Attendance.find_one(
+        Attendance.user_id == user_id, Attendance.meeting_id == meeting_id
     )
     if existing:
         existing.status = status
-        db.commit()
-        db.refresh(existing)
+        await existing.save()
         return existing
 
-    att = Attendance(user_id=user_id, meeting_id=meeting_id, status=status)
-    db.add(att)
-    db.commit()
-    db.refresh(att)
-    return att
+    return await Attendance(user_id=user_id, meeting_id=meeting_id, status=status).insert()
 
 
-def remove_attendance(db: Session, user_id: int, meeting_id: int):
+async def remove_attendance(user_id: PydanticObjectId, meeting_id: PydanticObjectId) -> Attendance:
     """Elimina la asistencia de un usuario a una reunión (desinvitarlo)."""
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
-        .first()
+    att = await Attendance.find_one(
+        Attendance.user_id == user_id, Attendance.meeting_id == meeting_id
     )
 
     if not att:
         raise HTTPException(status_code=404, detail="Attendance not found")
 
-    db.delete(att)
-    db.commit()
+    await att.delete()
     return att
 
 
-def list_attendance_for_user(db: Session, user_id: int):
-    return db.query(Attendance).filter(Attendance.user_id == user_id).all()
+async def list_attendance_for_user(user_id: PydanticObjectId) -> list[Attendance]:
+    return await Attendance.find(Attendance.user_id == user_id).to_list()
 
 
-def list_attendance_for_meeting(db: Session, meeting_id: int):
-    """Return all attendance rows for a given meeting id."""
-    return db.query(Attendance).filter(Attendance.meeting_id == meeting_id).all()
+async def list_attendance_for_meeting(meeting_id: PydanticObjectId) -> list[Attendance]:
+    """Devuelve todas las asistencias de una reunión."""
+    return await Attendance.find(Attendance.meeting_id == meeting_id).to_list()
 
 
-def list_attendance_for_meeting_with_name_user(db: Session, meeting_id: int):
-    """Return all attendance rows for a given meeting id and the users names."""
-    # Query returns tuples (Attendance, user_name). Convert to list of dicts
-    rows = (
-        db.query(Attendance, User.name.label("user_name"))
-        .join(User, Attendance.user_id == User.id)
-        .filter(Attendance.meeting_id == meeting_id)
-        .all()
-    )
+async def list_attendance_for_meeting_with_name_user(meeting_id: PydanticObjectId) -> list[dict]:
+    """Asistencias de una reunión, cada una con el nombre del usuario.
+
+    Sin JOIN: se traen las asistencias y después los usuarios en una sola consulta.
+    """
+    rows = await Attendance.find(Attendance.meeting_id == meeting_id).to_list()
+    if not rows:
+        return []
+
+    users = await User.find({"_id": {"$in": [att.user_id for att in rows]}}).to_list()
+    names = {user.id: user.name for user in users}
 
     return [
         {
@@ -112,18 +106,20 @@ def list_attendance_for_meeting_with_name_user(db: Session, meeting_id: int):
             "meeting_id": att.meeting_id,
             "status": att.status,
             "marked_at": att.marked_at,
-            "user_name": user_name,
+            "user_name": names.get(att.user_id, ""),
         }
-        for att, user_name in rows
+        for att in rows
+        # Igual que el INNER JOIN anterior: sin usuario, la fila no aparece
+        if att.user_id in names
     ]
 
 
-def get_attendance_for_user(db: Session, user_id: int, meeting_id: int):
-    """Get attendance record for a specific user and meeting."""
-    attendance = (
-        db.query(Attendance)
-        .filter(Attendance.user_id == user_id, Attendance.meeting_id == meeting_id)
-        .first()
+async def get_attendance_for_user(
+    user_id: PydanticObjectId, meeting_id: PydanticObjectId
+) -> Attendance:
+    """Asistencia de un usuario en una reunión."""
+    attendance = await Attendance.find_one(
+        Attendance.user_id == user_id, Attendance.meeting_id == meeting_id
     )
     if not attendance:
         raise HTTPException(status_code=404, detail="Attendance record not found")

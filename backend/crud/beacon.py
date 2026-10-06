@@ -1,13 +1,11 @@
 """Operaciones de base de datos sobre beacons."""
 from datetime import datetime, timezone
 
-from sqlalchemy.orm import Session
-
 from models import Beacon
 from schemas import BeaconCreate, BeaconUpdate
 
 
-def create_beacon(db: Session, beacon: BeaconCreate):
+async def create_beacon(beacon: BeaconCreate) -> Beacon:
     db_beacon = Beacon(
         id=beacon.id,
         major=beacon.major,
@@ -15,26 +13,23 @@ def create_beacon(db: Session, beacon: BeaconCreate):
         location=beacon.location,
         name=beacon.name,
     )
-    db.add(db_beacon)
-    db.commit()
-    db.refresh(db_beacon)
-    return db_beacon
+    return await db_beacon.insert()
 
 
-def get_beacons(db: Session):
-    return db.query(Beacon).all()
+async def get_beacons() -> list[Beacon]:
+    return await Beacon.find_all().to_list()
 
 
-def get_beacon(db: Session, beacon_id: str):
-    return db.query(Beacon).filter(Beacon.id == beacon_id).first()
+async def get_beacon(beacon_id: str) -> Beacon | None:
+    return await Beacon.get(beacon_id)
 
 
-def get_beacon_by_location(db: Session, location: str):
-    return db.query(Beacon).filter(Beacon.location == location).first()
+async def get_beacon_by_location(location: str) -> Beacon | None:
+    return await Beacon.find_one(Beacon.location == location)
 
 
-def update_beacon(db: Session, beacon_id: str, beacon_data: BeaconUpdate):
-    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+async def update_beacon(beacon_id: str, beacon_data: BeaconUpdate) -> Beacon | None:
+    beacon = await Beacon.get(beacon_id)
     if not beacon:
         return None
 
@@ -49,23 +44,20 @@ def update_beacon(db: Session, beacon_id: str, beacon_data: BeaconUpdate):
 
     beacon.last_used = datetime.now(timezone.utc)
 
-    db.commit()
-    db.refresh(beacon)
+    await beacon.save()
     return beacon
 
 
-def update_beacon_last_used(db: Session, beacon_id: str):
-    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+async def update_beacon_last_used(beacon_id: str) -> Beacon | None:
+    beacon = await Beacon.get(beacon_id)
     if beacon:
         beacon.last_used = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(beacon)
+        await beacon.save()
     return beacon
 
 
-def delete_beacon(db: Session, beacon_id: str):
-    beacon = db.query(Beacon).filter(Beacon.id == beacon_id).first()
+async def delete_beacon(beacon_id: str) -> Beacon | None:
+    beacon = await Beacon.get(beacon_id)
     if beacon:
-        db.delete(beacon)
-        db.commit()
+        await beacon.delete()
     return beacon

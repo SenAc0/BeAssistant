@@ -1,22 +1,31 @@
-from sqlalchemy import Column, DateTime, Integer, String, UniqueConstraint, func
-from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
 
-from db import Base
+from beanie import Document
+from pydantic import Field
+from pymongo import IndexModel
 
 
-class Beacon(Base):
-    __tablename__ = "beacons"
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
 
-    id = Column(String, primary_key=True, index=True)
-    major = Column(Integer, index=True)
-    minor = Column(Integer, index=True)
-    location = Column(String, index=True)
-    last_used = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    name = Column(String, index=True, nullable=True)
 
-    # Relationships
-    meetings = relationship("Meeting", back_populates="beacon")
+class Beacon(Document):
+    """Beacon físico.
 
-    __table_args__ = (
-        UniqueConstraint("id", "name", name="uq_beacon_id_name"),
-    )
+    El `_id` es el identificador del hardware (el UUID que emite el beacon), no
+    un ObjectId: es una clave natural y es la que usan las reuniones y la app.
+    """
+
+    id: str = Field(default=None, alias="_id")
+    major: int
+    minor: int
+    location: str
+    name: str | None = None
+    last_used: datetime = Field(default_factory=_now_utc)
+
+    class Settings:
+        name = "beacons"
+        indexes = [
+            IndexModel([("location", 1)], name="ix_beacon_location"),
+            IndexModel([("major", 1), ("minor", 1)], name="ix_beacon_major_minor"),
+        ]

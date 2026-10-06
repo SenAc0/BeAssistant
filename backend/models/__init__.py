@@ -1,18 +1,25 @@
-"""Modelos SQLAlchemy.
+"""Documentos de MongoDB (Beanie).
 
-Se importan todos aquí para que `Base.metadata` quede completo y para mantener
-compatibilidad con el uso previo (`models.User`, `models.Meeting`, ...).
+`ALL_DOCUMENTS` es la lista que recibe `init_beanie`: todo documento nuevo tiene
+que quedar registrado ahí o sus consultas fallarán al no estar inicializado.
 """
-from db import Base
-
 from .attendance import Attendance
 from .beacon import Beacon
 from .meeting import Meeting
 from .report import GeneralReport, MeetingReport
 from .user import User
 
+ALL_DOCUMENTS = [
+    User,
+    Beacon,
+    Meeting,
+    Attendance,
+    MeetingReport,
+    GeneralReport,
+]
+
 __all__ = [
-    "Base",
+    "ALL_DOCUMENTS",
     "Attendance",
     "Beacon",
     "Meeting",

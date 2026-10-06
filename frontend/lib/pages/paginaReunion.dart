@@ -5,7 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:myapp/pages/crearReunion3.dart';
 
 class PaginaReunion extends StatefulWidget {
-  final int meetingID;
+  final String meetingID;
 
   const PaginaReunion({super.key, required this.meetingID});
 

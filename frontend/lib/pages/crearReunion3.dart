@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/services/services.dart';
 
 class CrearReunion3 extends StatefulWidget {
-  final int meetingId;
+  final String meetingId;
 
   const CrearReunion3({super.key, required this.meetingId});
 
@@ -11,7 +11,7 @@ class CrearReunion3 extends StatefulWidget {
 }
 
 class _CrearReunion3State extends State<CrearReunion3> {
-  List<int> asistentesSeleccionados = [];
+  List<String> asistentesSeleccionados = [];
   bool _cargadoInicial =
       false; // evita sobrescribir la selección al reconstruir
 
@@ -64,7 +64,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
           // Cargar asistentes preseleccionados solo la primera vez
           if (!_cargadoInicial) {
             asistentesSeleccionados = asistentes
-                .map<int>((a) => a["user_id"] as int)
+                .map<String>((a) => a["user_id"] as String)
                 .toList();
             _cargadoInicial = true;
           }
@@ -130,12 +130,12 @@ class _CrearReunion3State extends State<CrearReunion3> {
         await AttendanceService().getAttendanceForMeeting(widget.meetingId);
 
     final asistentesActuales =
-        asistentesBackend.map<int>((a) => a["user_id"] as int).toList();
+        asistentesBackend.map<String>((a) => a["user_id"] as String).toList();
 
     bool todoOK = true;
 
     // Agregar nuevos
-    for (int id in asistentesSeleccionados) {
+    for (String id in asistentesSeleccionados) {
       if (!asistentesActuales.contains(id)) {
         bool ok = await AttendanceService().addAssistant(widget.meetingId, id);
         if (!ok) todoOK = false;
@@ -143,7 +143,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
     }
 
     // Eliminar los que ya no están seleccionados
-    for (int id in asistentesActuales) {
+    for (String id in asistentesActuales) {
       if (!asistentesSeleccionados.contains(id)) {
         bool ok = await AttendanceService().removeAssistant(widget.meetingId, id);
         if (!ok) todoOK = false;
@@ -216,11 +216,11 @@ class BotonesReunion3 extends StatelessWidget {
 // --- WIDGET TARJETA DE REUNIÓN ---
 
 class AgregarAsistenteCard extends StatefulWidget {
-  final int userId;
+  final String userId;
   final String nombre;
   final String correo;
   final bool inicialmenteSeleccionado;
-  final Function(int userId, bool selected) onSelected;
+  final Function(String userId, bool selected) onSelected;
 
   const AgregarAsistenteCard({
     super.key,

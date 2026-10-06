@@ -1,5 +1,4 @@
-from typing import Optional
-
+from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 
@@ -17,9 +16,9 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     """User model returned by the API."""
-    id: int
+    id: PydanticObjectId
     is_admin: bool
-    onesignal_player_id: Optional[str] = None
+    onesignal_player_id: str | None = None
 
     model_config = {"from_attributes": True}
 

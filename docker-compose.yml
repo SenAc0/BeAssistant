@@ -1,20 +1,22 @@
-
 services:
-  # Base de datos PostgreSQL
-  postgres:
-    image: postgres:15
-    container_name: beacon_postgres
+  # Base de datos MongoDB
+  mongo:
+    image: mongo:7
+    container_name: beacon_mongo
     environment:
-      POSTGRES_DB: beacon_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin1234
+      MONGO_INITDB_DATABASE: beassistant
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongo_data:/data/db
     networks:
       - app_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Backend FastAPI
   backend:
@@ -23,22 +25,24 @@ services:
       dockerfile: Dockerfile
     container_name: beacon_backend
     environment:
-      DATABASE_URL: postgresql://postgres:admin1234@postgres:5432/beacon_db
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_DB: beassistant
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      mongo:
+        condition: service_healthy
     networks:
       - app_network
     restart: unless-stopped
     volumes:
       - ./backend:/app
-    command: ["sh", "-c", "sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Volúmenes persistentes
 volumes:
-  postgres_data:
-    name: beacon_postgres_data
+  mongo_data:
+    name: beacon_mongo_data
 
 # Red para comunicación entre contenedores
 networks:

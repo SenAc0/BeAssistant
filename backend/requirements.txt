@@ -1,7 +1,6 @@
 fastapi
 uvicorn
-SQLAlchemy
-psycopg2-binary
+beanie==2.2.0   # trae pymongo (cliente async nativo; Motor quedo deprecado)
 pydantic
 python-multipart
 python-jose

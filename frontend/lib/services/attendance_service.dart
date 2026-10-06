@@ -6,7 +6,7 @@ import 'api_client.dart';
 
 /// Asistencia: marcar la propia, invitar/quitar asistentes y consultar listas.
 class AttendanceService extends ApiClient {
-  Future<bool> markAttendance(int meetingID) async {
+  Future<bool> markAttendance(String meetingID) async {
     final token = await getToken();
     if (token == null) return false;
 
@@ -23,7 +23,7 @@ class AttendanceService extends ApiClient {
 
   /// Obtiene la asistencia del usuario autenticado para una reunión específica.
   /// Retorna un mapa con la asistencia o `null` si no existe o hay error.
-  Future<Map<String, dynamic>?> getMyAttendanceForMeeting(int meetingID) async {
+  Future<Map<String, dynamic>?> getMyAttendanceForMeeting(String meetingID) async {
     final token = await getToken();
     if (token == null) {
       print("No hay token disponible.");
@@ -69,7 +69,7 @@ class AttendanceService extends ApiClient {
   }
 
   /// Agregar asistente a una reunión
-  Future<bool> addAssistant(int meetingId, int userId) async {
+  Future<bool> addAssistant(String meetingId, String userId) async {
     final url = endpoint('/attendance');
 
     final body = {
@@ -93,13 +93,13 @@ class AttendanceService extends ApiClient {
   }
 
   /// Eliminar asistente de una reunión
-  Future<bool> removeAssistant(int meetingId, int userId) async {
+  Future<bool> removeAssistant(String meetingId, String userId) async {
     final token = await getToken();
 
     final url = endpoint('/attendance').replace(
       queryParameters: {
-        "user_id": userId.toString(),
-        "meeting_id": meetingId.toString(),
+        "user_id": userId,
+        "meeting_id": meetingId,
       },
     );
 
@@ -115,7 +115,7 @@ class AttendanceService extends ApiClient {
   }
 
   /// Obtener la lista de asistentes de una reunión
-  Future<List<dynamic>> getAttendanceForMeeting(int meetingId) async {
+  Future<List<dynamic>> getAttendanceForMeeting(String meetingId) async {
     final token = await getToken();
 
     final response = await http.get(
@@ -131,7 +131,7 @@ class AttendanceService extends ApiClient {
   }
 
   /// Obtener la lista de asistentes de una reunión incluyendo el nombre de usuario
-  Future<List<dynamic>> getAttendanceForMeetingWithUserName(int meetingId) async {
+  Future<List<dynamic>> getAttendanceForMeetingWithUserName(String meetingId) async {
     final token = await getToken();
 
     final response = await http.get(

@@ -57,7 +57,7 @@ class MeetingService extends ApiClient {
   }
 
   /// Obtener solo una reunion por id de la reunion
-  Future<Map<String, dynamic>?> getMeeting(int meetingID) async {
+  Future<Map<String, dynamic>?> getMeeting(String meetingID) async {
     final token = await getToken();
     if (token == null) {
       print("No hay token disponible");

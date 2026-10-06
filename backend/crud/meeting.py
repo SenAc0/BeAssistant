@@ -1,35 +1,41 @@
 """Operaciones de base de datos sobre reuniones."""
 from datetime import timedelta, timezone
 
+from beanie import PydanticObjectId
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
 from models import Attendance, Beacon, Meeting, User
 from schemas import MeetingCreate
 from utils.timezone import CHILE_TZ
 
+# En Mongo "no tiene fecha" es null o campo ausente; este filtro pide que exista.
+_HAS_TIME_WINDOW = {
+    "start_time": {"$ne": None},
+    "end_time": {"$ne": None},
+}
 
-def _validate_no_overlap(db: Session, meeting: MeetingCreate, start_utc, end_utc):
+
+def _overlap_filter(start_utc, end_utc) -> dict:
+    """Reuniones cuya ventana se cruza con [start_utc, end_utc)."""
+    return {
+        "start_time": {"$ne": None, "$lt": end_utc},
+        "end_time": {"$ne": None, "$gt": start_utc},
+    }
+
+
+async def _validate_no_overlap(meeting: MeetingCreate, start_utc, end_utc) -> None:
     """Valida que no exista otra reunión solapada en el mismo beacon o ubicación."""
     # If a beacon_id is provided, optionally validate it exists
     beacon_obj = None
     if meeting.beacon_id:
-        beacon_obj = db.query(Beacon).filter(Beacon.id == meeting.beacon_id).first()
+        beacon_obj = await Beacon.get(meeting.beacon_id)
         if not beacon_obj:
             raise HTTPException(status_code=404, detail="Beacon not found")
 
     # 1) Same beacon overlap check
     if meeting.beacon_id:
-        conflict_beacon = (
-            db.query(Meeting)
-            .filter(
-                Meeting.beacon_id == meeting.beacon_id,
-                Meeting.start_time != None,  # noqa: E711 - SQLAlchemy requiere `!= None`
-                Meeting.end_time != None,  # noqa: E711
-                Meeting.start_time < end_utc,
-                Meeting.end_time > start_utc,
-            )
-            .first()
+        conflict_beacon = await Meeting.find_one(
+            {"beacon_id": meeting.beacon_id, **_overlap_filter(start_utc, end_utc)}
         )
         if conflict_beacon:
             raise HTTPException(
@@ -44,50 +50,47 @@ def _validate_no_overlap(db: Session, meeting: MeetingCreate, start_utc, end_utc
     # Determine the location to compare: payload location, otherwise beacon's location
     location_key = meeting.location or (beacon_obj.location if beacon_obj else None)
     if location_key:
-        conflict_location = (
-            db.query(Meeting)
-            .join(Beacon, Meeting.beacon_id == Beacon.id)
-            .filter(
-                Beacon.location == location_key,
-                Meeting.start_time != None,  # noqa: E711
-                Meeting.end_time != None,  # noqa: E711
-                Meeting.start_time < end_utc,
-                Meeting.end_time > start_utc,
+        # Sin JOIN: primero los beacons de esa ubicación, después sus reuniones.
+        beacon_ids = [
+            b.id for b in await Beacon.find(Beacon.location == location_key).to_list()
+        ]
+        if beacon_ids:
+            conflict_location = await Meeting.find_one(
+                {"beacon_id": {"$in": beacon_ids}, **_overlap_filter(start_utc, end_utc)}
             )
-            .first()
-        )
-        if conflict_location:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Overlap detected: another meeting is scheduled in the same location "
-                    "within the selected time window"
-                ),
-            )
+            if conflict_location:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Overlap detected: another meeting is scheduled in the same location "
+                        "within the selected time window"
+                    ),
+                )
 
 
-def _ensure_coordinator_attendance(db: Session, meeting_id: int, coordinator_id: int):
+async def _ensure_coordinator_attendance(
+    meeting_id: PydanticObjectId, coordinator_id: PydanticObjectId
+) -> None:
     """Crea la fila de Attendance del coordinador ('absent' = invitado sin confirmar)."""
     try:
-        existing_att = (
-            db.query(Attendance)
-            .filter(Attendance.user_id == coordinator_id, Attendance.meeting_id == meeting_id)
-            .first()
+        existing_att = await Attendance.find_one(
+            Attendance.user_id == coordinator_id,
+            Attendance.meeting_id == meeting_id,
         )
         if not existing_att:
             # Verificar que el usuario existe antes de crear la asistencia
-            user_obj = db.query(User).filter(User.id == coordinator_id).first()
-            if user_obj:
-                att = Attendance(user_id=coordinator_id, meeting_id=meeting_id, status="absent")
-                db.add(att)
-                db.commit()
-                db.refresh(att)
+            if await User.get(coordinator_id):
+                await Attendance(
+                    user_id=coordinator_id, meeting_id=meeting_id, status="absent"
+                ).insert()
     except Exception:
         # No queremos que la creación de la asistencia bloquee la creación de la reunión.
-        db.rollback()
+        pass
 
 
-def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | None = None) -> Meeting:
+async def create_meeting(
+    meeting: MeetingCreate, coordinator_id: PydanticObjectId | None = None
+) -> Meeting:
     # Compute end_time from start_time + duration_minutes
     start_utc = None
     end_utc = None
@@ -102,9 +105,9 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
     # If we don't have times, skip overlap validation and let it be created as-is
 
     if start_utc and end_utc:
-        _validate_no_overlap(db, meeting, start_utc, end_utc)
+        await _validate_no_overlap(meeting, start_utc, end_utc)
 
-    db_meeting = Meeting(
+    db_meeting = await Meeting(
         title=meeting.title,
         description=meeting.description,
         start_time=start_utc,
@@ -114,39 +117,36 @@ def create_meeting(db: Session, meeting: MeetingCreate, coordinator_id: int | No
         note=meeting.note,
         coordinator_id=coordinator_id,
         beacon_id=meeting.beacon_id,
-    )
-    db.add(db_meeting)
-    db.commit()
-    db.refresh(db_meeting)
+    ).insert()
 
     if coordinator_id is not None:
-        _ensure_coordinator_attendance(db, db_meeting.id, coordinator_id)
+        await _ensure_coordinator_attendance(db_meeting.id, coordinator_id)
 
     return db_meeting
 
 
-def list_meetings(db: Session):
-    return db.query(Meeting).order_by(Meeting.start_time.desc().nullslast()).all()
+async def list_meetings() -> list[Meeting]:
+    # Mongo ordena null por debajo de cualquier fecha, así que en descendente
+    # las reuniones sin fecha quedan al final (equivale al nullslast de antes).
+    return await Meeting.find_all().sort(-Meeting.start_time).to_list()
 
 
-def get_meeting(db: Session, meeting_id: int):
-    return db.query(Meeting).filter(Meeting.id == meeting_id).first()
+async def get_meeting(meeting_id: PydanticObjectId) -> Meeting | None:
+    return await Meeting.get(meeting_id)
 
 
-def list_meetings_for_user(db: Session, user_id: int):
-    # Reuniones donde es coordinador
-    coordinator_meetings = db.query(Meeting).filter(Meeting.coordinator_id == user_id)
-
+async def list_meetings_for_user(user_id: PydanticObjectId) -> list[Meeting]:
     # Reuniones donde fue agregado como asistente
-    attendee_meetings = (
-        db.query(Meeting)
-        .join(Attendance, Attendance.meeting_id == Meeting.id)
-        .filter(Attendance.user_id == user_id)
-    )
+    attended_ids = [
+        att.meeting_id
+        for att in await Attendance.find(Attendance.user_id == user_id).to_list()
+    ]
 
-    # Unir ambas sin duplicados
+    # Unir con las que coordina, sin duplicados (el $or los evita por sí mismo)
     return (
-        coordinator_meetings.union(attendee_meetings)
-        .order_by(Meeting.start_time.desc().nullslast())
-        .all()
+        await Meeting.find(
+            {"$or": [{"coordinator_id": user_id}, {"_id": {"$in": attended_ids}}]}
+        )
+        .sort(-Meeting.start_time)
+        .to_list()
     )

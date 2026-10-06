@@ -1,43 +1,39 @@
 """Generación y consulta de reportes."""
 from datetime import timezone
 
+from beanie import PydanticObjectId
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
 from models import Attendance, Meeting, MeetingReport
 from utils.timezone import CHILE_TZ
 
 
-def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
+async def generate_meeting_report(meeting_id: PydanticObjectId) -> MeetingReport:
     """Genera (o devuelve si ya existe) el reporte de una reunión específica.
 
     - fecha: se toma de start_time (en formato YYYY-MM-DD) o created_at si no hay start_time.
     - nombre_reunion: título de la reunión.
-    - asistencias_totales: total de registros de asistencia (present/late/absent).
-    - porcentaje_asistencias: porcentaje de present + late sobre total.
-    - porcentaje_ausencias: porcentaje de absent sobre total.
+    - asistentes_totales: cantidad de 'present'.
+    - porcentaje_asistencias / ausencias / tarde: sobre el total de invitados.
 
     Los campos cantidad_asistencias y cantidad_reuniones quedan definidos pero sin lógica aún.
     """
-    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    meeting = await Meeting.get(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
     # Si ya existe un reporte para esta reunión, lo devolvemos
-    existing = db.query(MeetingReport).filter(MeetingReport.meeting_id == meeting_id).first()
+    existing = await MeetingReport.find_one(MeetingReport.meeting_id == meeting_id)
     if existing:
         return existing
 
-    # Calcular datos de asistencia
-    attendance_qs = db.query(Attendance).filter(Attendance.meeting_id == meeting_id)
-
-    # Invitados totales: cantidad de registros de attendance (todos los que fueron agregados)
-    invitados_totales = attendance_qs.count()
+    # Invitados totales: cantidad de asistencias registradas (todos los agregados)
+    invitados_totales = await Attendance.find(Attendance.meeting_id == meeting_id).count()
 
     # Clasificación por estado
-    present_count = attendance_qs.filter(Attendance.status == "present").count()
-    late_count = attendance_qs.filter(Attendance.status == "late").count()
-    absent_count = attendance_qs.filter(Attendance.status == "absent").count()
+    present_count = await _count_status(meeting_id, "present")
+    late_count = await _count_status(meeting_id, "late")
+    absent_count = await _count_status(meeting_id, "absent")
 
     asistentes_totales = present_count  # + late_count -> considerar solo present como asistentes
 
@@ -50,7 +46,7 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
         porcentaje_ausencias = 0.0
         porcentaje_tarde = 0.0
 
-    report = MeetingReport(
+    return await MeetingReport(
         meeting_id=meeting.id,
         fecha=_format_report_date(meeting),
         nombre_reunion=meeting.title,
@@ -64,12 +60,13 @@ def generate_meeting_report(db: Session, meeting_id: int) -> MeetingReport:
         # Campos * quedan sin lógica aún
         cantidad_asistencias=None,
         cantidad_reuniones=None,
-    )
+    ).insert()
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
-    return report
+
+async def _count_status(meeting_id: PydanticObjectId, status: str) -> int:
+    return await Attendance.find(
+        Attendance.meeting_id == meeting_id, Attendance.status == status
+    ).count()
 
 
 def _format_report_date(meeting: Meeting) -> str:
@@ -83,15 +80,13 @@ def _format_report_date(meeting: Meeting) -> str:
     return base_dt.astimezone(CHILE_TZ).strftime("%Y-%m-%d")
 
 
-def get_meeting_report(db: Session, meeting_id: int) -> MeetingReport | None:
+async def get_meeting_report(meeting_id: PydanticObjectId) -> MeetingReport | None:
     """Obtiene el reporte de una reunión si existe, sin generarlo."""
-    return db.query(MeetingReport).filter(MeetingReport.meeting_id == meeting_id).first()
+    return await MeetingReport.find_one(MeetingReport.meeting_id == meeting_id)
 
 
-def generate_general_report(db: Session, user_id: int):
-    attendance_qs = db.query(Attendance).filter(Attendance.user_id == user_id)
-
-    total_reuniones = attendance_qs.count()
+async def generate_general_report(user_id: PydanticObjectId) -> dict:
+    total_reuniones = await Attendance.find(Attendance.user_id == user_id).count()
     if total_reuniones == 0:
         return {
             "cantidad_asistencias": 0,
@@ -102,9 +97,9 @@ def generate_general_report(db: Session, user_id: int):
             "porcentaje_atrasados": 0.0,
         }
 
-    asistencias = attendance_qs.filter(Attendance.status == "present").count()
-    ausencias = attendance_qs.filter(Attendance.status == "absent").count()
-    atrasados = attendance_qs.filter(Attendance.status == "late").count()
+    asistencias = await _count_user_status(user_id, "present")
+    ausencias = await _count_user_status(user_id, "absent")
+    atrasados = await _count_user_status(user_id, "late")
 
     return {
         "cantidad_asistencias": asistencias,
@@ -114,3 +109,9 @@ def generate_general_report(db: Session, user_id: int):
         "porcentaje_ausencias": (ausencias / total_reuniones) * 100,
         "porcentaje_atrasados": (atrasados / total_reuniones) * 100,
     }
+
+
+async def _count_user_status(user_id: PydanticObjectId, status: str) -> int:
+    return await Attendance.find(
+        Attendance.user_id == user_id, Attendance.status == status
+    ).count()

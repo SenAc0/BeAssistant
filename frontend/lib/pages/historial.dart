@@ -40,7 +40,7 @@ class _HistorialState extends State<Historial> with WidgetsBindingObserver {
   Future<void> cargarHistorial() async {
     final allMeetings = await MeetingService().getMyMeetings();
     final perfil = await AuthService().getProfile();
-    final int myUserId = perfil?['id'] ?? 0;
+    final String myUserId = perfil?['id'] ?? '';
 
 
     if (allMeetings == null) {

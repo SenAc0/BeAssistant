@@ -5,7 +5,7 @@ import 'package:myapp/widgets/indicator.dart';
 import 'package:myapp/pages/listaAsistentes.dart';
 import 'package:myapp/services/services.dart';
 class ReporteReunion extends StatefulWidget {
-  final int? meetingId;
+  final String? meetingId;
   const ReporteReunion({super.key, this.meetingId});
 
   @override

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/services/services.dart';
 
 class ListaAsistentes extends StatefulWidget {
-  final int? meetingId;
+  final String? meetingId;
   const ListaAsistentes({super.key, this.meetingId});
 
   @override

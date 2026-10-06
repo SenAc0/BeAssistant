@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
 
+from beanie import PydanticObjectId
 from pydantic import BaseModel, field_serializer
 
 from utils.timezone import to_chile
@@ -12,7 +12,7 @@ class _ChileTimes(BaseModel):
     """Serializa los datetime de la reunión a horario de Chile.
 
     Se persiste en UTC y la conversión ocurre solo al armar la respuesta, de modo
-    que el objeto del ORM nunca se modifica (ver `utils/timezone.py`).
+    que el documento nunca se modifica (ver `utils/timezone.py`).
     """
 
     @field_serializer("start_time", "end_time", "created_at", check_fields=False)
@@ -23,14 +23,14 @@ class _ChileTimes(BaseModel):
 class MeetingBase(BaseModel):
     """Base meeting fields used for create/update and read."""
     title: str
-    description: Optional[str] = None
-    start_time: Optional[datetime] = None
+    description: str | None = None
+    start_time: datetime | None = None
     # end_time is computed server-side for create; included in Meeting response only
-    topics: Optional[str] = None
-    repeat_weekly: Optional[bool] = False
-    note: Optional[str] = None
-    location: Optional[str] = None
-    beacon_id: Optional[str] = None
+    topics: str | None = None
+    repeat_weekly: bool | None = False
+    note: str | None = None
+    location: str | None = None
+    beacon_id: str | None = None
 
 
 class MeetingCreate(MeetingBase):
@@ -42,10 +42,10 @@ class MeetingCreate(MeetingBase):
 
 class Meeting(_ChileTimes, MeetingBase):
     """Meeting model returned by list/detail endpoints."""
-    id: int
+    id: PydanticObjectId
     created_at: datetime
-    end_time: Optional[datetime] = None
-    coordinator_id: Optional[int] = None
+    end_time: datetime | None = None
+    coordinator_id: PydanticObjectId | None = None
 
     model_config = {"from_attributes": True}
 
@@ -53,11 +53,11 @@ class Meeting(_ChileTimes, MeetingBase):
 # Schema con relaciones anidadas para detalles completos
 class MeetingDetail(_ChileTimes, MeetingBase):
     """Meeting detail including coordinator and beacon location."""
-    id: int
+    id: PydanticObjectId
     created_at: datetime
-    end_time: Optional[datetime] = None
-    coordinator_id: Optional[int] = None
-    coordinator: Optional[User] = None
-    location: Optional[str] = None  # Del beacon
+    end_time: datetime | None = None
+    coordinator_id: PydanticObjectId | None = None
+    coordinator: User | None = None
+    location: str | None = None  # Del beacon
 
     model_config = {"from_attributes": True}

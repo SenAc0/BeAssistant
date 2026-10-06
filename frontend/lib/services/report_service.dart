@@ -30,7 +30,7 @@ class ReportService extends ApiClient {
   }
 
   /// Genera (o devuelve, si ya existe) el reporte de una reunión.
-  Future<Map<String, dynamic>?> getReportMeeting(int meetingID) async {
+  Future<Map<String, dynamic>?> getReportMeeting(String meetingID) async {
     final token = await getToken();
     if (token == null) {
       print("No hay token disponible.");

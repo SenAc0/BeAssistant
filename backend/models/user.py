@@ -1,23 +1,17 @@
-from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy.orm import relationship
+from beanie import Document
+from pydantic import Field
+from pymongo import IndexModel
 
-from db import Base
 
+class User(Document):
+    name: str
+    email: str
+    hashed_password: str
+    is_admin: bool = False  # Boleano para saber si el usuario es admin
+    onesignal_player_id: str | None = None  # Player ID de OneSignal para notificaciones
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_admin = Column(Boolean, default=False)  # Boleano para saber si el usuario es admin
-    onesignal_player_id = Column(String, nullable=True)  # Player ID de OneSignal para notificaciones
-
-    # Relationships
-    attendances = relationship("Attendance", back_populates="user", cascade="all, delete-orphan")
-    coordinated_meetings = relationship(
-        "Meeting",
-        back_populates="coordinator",
-        foreign_keys="Meeting.coordinator_id",
-    )
+    class Settings:
+        name = "users"
+        indexes = [
+            IndexModel([("email", 1)], unique=True, name="uq_user_email"),
+        ]

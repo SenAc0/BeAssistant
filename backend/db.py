@@ -1,21 +1,52 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+"""Conexión a MongoDB e inicialización de Beanie.
+
+A diferencia de SQLAlchemy, Beanie no necesita una sesión por request: los
+documentos quedan ligados al cliente al inicializarse, así que los endpoints
+no reciben ninguna dependencia de base de datos.
+
+El cliente es `AsyncMongoClient` de PyMongo (el async nativo del driver). Beanie 2
+dejó de usar Motor, que quedó deprecado upstream.
+"""
 import os
 
-# Usar variable de entorno para la URL de la base de datos
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin1234@localhost:5432/mhu")
-#DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin1234@postgres:5432/beacon_db")
+from beanie import init_beanie
+from pymongo import AsyncMongoClient
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+MONGODB_DB = os.getenv("MONGODB_DB", "beassistant")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+_client: AsyncMongoClient | None = None
 
-def create_table():
-    Base.metadata.create_all(bind=engine)
+
+def get_client() -> AsyncMongoClient:
+    """Cliente de Mongo (se crea en el primer uso).
+
+    `tz_aware=True` hace que las fechas vuelvan como datetime con tzinfo UTC, que
+    es lo que esperan `utils/timezone.py` y la validación de ventanas horarias.
+    """
+    global _client
+    if _client is None:
+        _client = AsyncMongoClient(MONGODB_URL, tz_aware=True)
+    return _client
+
+
+async def init_db(client: AsyncMongoClient | None = None) -> None:
+    """Registra los documentos y crea los índices declarados en cada modelo.
+
+    Hay que llamarla antes de usar cualquier modelo: lo hace el lifespan de la
+    app y también los scripts de seed. `client` permite inyectar otro cliente.
+    """
+    # Import local para evitar un ciclo: models importa de este módulo.
+    from models import ALL_DOCUMENTS
+
+    await init_beanie(
+        database=(client or get_client())[MONGODB_DB],
+        document_models=ALL_DOCUMENTS,
+    )
+
+
+async def close_db() -> None:
+    global _client
+    if _client is not None:
+        await _client.close()
+        _client = None
