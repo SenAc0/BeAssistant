@@ -3,7 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/resources/app_resources.dart';
 import 'package:myapp/widgets/indicator.dart';
 import 'package:myapp/pages/listaAsistentes.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 class ReporteReunion extends StatefulWidget {
   final int? meetingId;
   const ReporteReunion({super.key, this.meetingId});
@@ -13,7 +13,7 @@ class ReporteReunion extends StatefulWidget {
 }
 
 class _ReporteReunionState extends State<ReporteReunion> {
-  final ApiService apiService = ApiService();
+  final ReportService apiService = ReportService();
   Map<String, dynamic>? reportData;
   bool loading = true;
 

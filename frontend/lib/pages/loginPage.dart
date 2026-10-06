@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/registerPage.dart';
 import 'package:myapp/scaffold.dart';
-import '../api_service.dart';
+import 'package:myapp/services/services.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -160,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        final success = await ApiService().login(
+                        final success = await AuthService().login(
                           _emailController.text.trim(),
                           _passwordController.text.trim(),
                         );
@@ -170,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           try {
                             final playerId = OneSignal.User.pushSubscription.id;
                             if (playerId != null && playerId.isNotEmpty) {
-                              await ApiService().registerDevice(playerId);
+                              await UserService().registerDevice(playerId);
                               print('Dispositivo registrado con player_id: $playerId');
                             }
                           } catch (e) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/paginaReunion.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class ListaReunionesScreen extends StatefulWidget {
@@ -11,7 +11,7 @@ class ListaReunionesScreen extends StatefulWidget {
 }
 
 class _ListaReunionesScreenState extends State<ListaReunionesScreen> {
-  final ApiService apiService = ApiService();
+  final MeetingService apiService = MeetingService();
   bool _loading = false;
   String? _error;
   List<dynamic> _meetings = [];

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/utils/homeNavigation.dart';
-import '../api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class CrearReunion2 extends StatefulWidget {
   final Map<String, dynamic> dataReunion;
@@ -22,7 +22,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
   @override
   void initState() {
     super.initState();
-    futureBeacons = ApiService().getBeacons();
+    futureBeacons = BeaconApiService().getBeacons();
   }
 
   // -------------------- PICKERS -----------------------
@@ -52,7 +52,7 @@ class _CrearReunion2State extends State<CrearReunion2> {
 
   // -------------------- ENVIAR REUNIÓN -----------------------
   Future<bool> enviarReunion() async {
-    final api = ApiService();
+    final api = MeetingService();
 
     final data = {
       "title": widget.dataReunion["title"],

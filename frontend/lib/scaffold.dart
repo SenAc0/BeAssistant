@@ -4,7 +4,7 @@ import 'package:myapp/pages/configurationPage.dart';
 import 'package:myapp/pages/historial.dart';
 import 'package:myapp/pages/listaReunionesPage.dart';
 import 'package:myapp/pages/reporteGeneral.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -33,7 +33,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   Future<void> cargarPerfil() async {
-    final me = await ApiService().getProfile();
+    final me = await AuthService().getProfile();
     setState(() {
       isAdmin = me?["is_admin"] ?? false;
 

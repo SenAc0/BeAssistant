@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class InfoBeacon extends StatefulWidget {
   const InfoBeacon({super.key});
@@ -10,7 +10,6 @@ class InfoBeacon extends StatefulWidget {
 
 class Beacon {
 
-  final ApiService apiservice = ApiService();
 
   final String id;
   final int major;
@@ -37,7 +36,7 @@ class Beacon {
 
 class BeaconService {
   Future<Beacon> fetchBeacon(String beaconId) async {
-    final data = await ApiService().getBeacon(beaconId);
+    final data = await BeaconApiService().getBeacon(beaconId);
     
     if (data == null) {
       throw Exception("No se pudo obtener el beacon");

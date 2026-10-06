@@ -6,7 +6,6 @@ import os
 from onesignal_sdk.client import Client
 from typing import List, Optional
 from dotenv import load_dotenv
-import sys
 
 # Cargar variables de entorno
 load_dotenv()

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 import 'package:myapp/pages/reporteReunion.dart';
 
 class Historial extends StatefulWidget {
@@ -38,8 +38,8 @@ class _HistorialState extends State<Historial> with WidgetsBindingObserver {
   }
 
   Future<void> cargarHistorial() async {
-    final allMeetings = await ApiService().getMyMeetings();
-    final perfil = await ApiService().getProfile();
+    final allMeetings = await MeetingService().getMyMeetings();
+    final perfil = await AuthService().getProfile();
     final int myUserId = perfil?['id'] ?? 0;
 
 
@@ -51,7 +51,7 @@ class _HistorialState extends State<Historial> with WidgetsBindingObserver {
     // Also fetch user's attendances to mark presence/absence
     List<dynamic> myAttendances = [];
     try {
-      myAttendances = await ApiService().getMyAttendances();
+      myAttendances = await AttendanceService().getMyAttendances();
     } catch (_) {
       // If the request fails, we'll assume no attendances.
       myAttendances = [];

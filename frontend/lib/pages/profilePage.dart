@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
@@ -18,7 +18,7 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   Future<void> loadProfile() async {
-    final data = await ApiService().getProfile();
+    final data = await AuthService().getProfile();
     setState(() {
       userData = data;
     });

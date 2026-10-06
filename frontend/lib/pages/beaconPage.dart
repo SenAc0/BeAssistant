@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class BeaconPage extends StatefulWidget {
   const BeaconPage({super.key});
@@ -9,7 +9,7 @@ class BeaconPage extends StatefulWidget {
 }
 
 class _BeaconPageState extends State<BeaconPage> {
-  final ApiService _apiService = ApiService();
+  final BeaconApiService _apiService = BeaconApiService();
   List<Map<String, dynamic>> beacons = [];
   bool _isLoading = true;
 

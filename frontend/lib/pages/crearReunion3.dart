@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class CrearReunion3 extends StatefulWidget {
   final int meetingId;
@@ -37,9 +37,9 @@ class _CrearReunion3State extends State<CrearReunion3> {
       //  CARGA USUARIOS + ASISTENTES YA AGREGADOS
       body: FutureBuilder(
         future: Future.wait([
-          ApiService().getUsers(),
-          ApiService().getAttendanceForMeeting(widget.meetingId),
-          ApiService().getMeeting(widget.meetingId),
+          UserService().getUsers(),
+          AttendanceService().getAttendanceForMeeting(widget.meetingId),
+          MeetingService().getMeeting(widget.meetingId),
         ]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -127,7 +127,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
  //GUARDAR CAMBIOS (agregar + quitar)
   Future<void> guardarAsistentes() async {
     final asistentesBackend =
-        await ApiService().getAttendanceForMeeting(widget.meetingId);
+        await AttendanceService().getAttendanceForMeeting(widget.meetingId);
 
     final asistentesActuales =
         asistentesBackend.map<int>((a) => a["user_id"] as int).toList();
@@ -137,7 +137,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
     // Agregar nuevos
     for (int id in asistentesSeleccionados) {
       if (!asistentesActuales.contains(id)) {
-        bool ok = await ApiService().addAssistant(widget.meetingId, id);
+        bool ok = await AttendanceService().addAssistant(widget.meetingId, id);
         if (!ok) todoOK = false;
       }
     }
@@ -145,7 +145,7 @@ class _CrearReunion3State extends State<CrearReunion3> {
     // Eliminar los que ya no están seleccionados
     for (int id in asistentesActuales) {
       if (!asistentesSeleccionados.contains(id)) {
-        bool ok = await ApiService().removeAssistant(widget.meetingId, id);
+        bool ok = await AttendanceService().removeAssistant(widget.meetingId, id);
         if (!ok) todoOK = false;
       }
     }

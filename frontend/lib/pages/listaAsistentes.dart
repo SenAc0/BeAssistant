@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class ListaAsistentes extends StatefulWidget {
   final int? meetingId;
@@ -10,7 +10,7 @@ class ListaAsistentes extends StatefulWidget {
 }
 
 class _ListaAsistentesState extends State<ListaAsistentes> {
-  final ApiService _api = ApiService();
+  final AttendanceService _api = AttendanceService();
 
   List<Map<String, String>> _asistentes = [];
   List<Map<String, String>> _filteredAsistentes = [];

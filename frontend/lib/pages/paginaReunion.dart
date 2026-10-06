@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 import 'package:myapp/pages/beacon_service.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:myapp/pages/crearReunion3.dart';
@@ -22,7 +22,7 @@ class _PaginaReunionState extends State<PaginaReunion> {
   bool _isCheckingAttendance = false;
   String _attendanceStatusCode = 'unknown';
   bool _isCoordinator = false; // ← nuevo
-  final ApiService _apiService = ApiService();
+  final AttendanceService _apiService = AttendanceService();
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _PaginaReunionState extends State<PaginaReunion> {
 
   Future<void> _cargarReunion() async {
     try {
-      final data = await ApiService().getMeeting(widget.meetingID);
+      final data = await MeetingService().getMeeting(widget.meetingID);
       setState(() {
         _reunion = data;
         _loading = false;
@@ -52,7 +52,7 @@ class _PaginaReunionState extends State<PaginaReunion> {
         _loading = false;
       });
     }
-    final profile = await ApiService().getProfile();
+    final profile = await AuthService().getProfile();
     if (profile != null) {
       final currentUserId = profile["id"];
       final coordinatorId = _reunion?["coordinator_id"];

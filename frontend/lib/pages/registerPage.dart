@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myapp/pages/loginPage.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -16,7 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final ApiService apiService = ApiService();
+  final AuthService apiService = AuthService();
   String? _errorMessage;
 
 

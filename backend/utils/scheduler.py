@@ -4,14 +4,13 @@ Revisa periódicamente reuniones que comenzarán pronto y notifica a los partici
 """
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
+
 from db import SessionLocal
-from models import Meeting, Attendance, User
-import notification_service
+from models import Attendance, Meeting, User
+from utils import notifications
 
 
-CHILE_TZ = ZoneInfo("America/Santiago")
 NOTIFICATION_MINUTES_BEFORE = 30  # Notificar 30 minutos antes
 
 # Cache para evitar enviar notificaciones duplicadas
@@ -85,7 +84,7 @@ def check_and_notify_upcoming_meetings():
             if player_ids:
                 print(f"Enviando notificacion para reunion '{meeting.title}' a {len(player_ids)} usuarios", flush=True)
                 print(f"   Player IDs: {player_ids}", flush=True)
-                result = notification_service.notify_meeting_starting(
+                result = notifications.notify_meeting_starting(
                     player_ids=player_ids,
                     meeting_title=meeting.title,
                     minutes_before=NOTIFICATION_MINUTES_BEFORE

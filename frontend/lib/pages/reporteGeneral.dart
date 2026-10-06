@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/resources/app_resources.dart';
 import 'package:myapp/widgets/indicator.dart';
-import 'package:myapp/api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class ReporteGeneral extends StatefulWidget {
   const ReporteGeneral({super.key});
@@ -13,7 +13,7 @@ class ReporteGeneral extends StatefulWidget {
 
 class _ReporteGeneralState extends State<ReporteGeneral> with WidgetsBindingObserver {
 
-  final ApiService apiService = ApiService();
+  final ReportService apiService = ReportService();
 
   Map<String, dynamic>? reportData;
 

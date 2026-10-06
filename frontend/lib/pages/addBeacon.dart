@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../api_service.dart';
+import 'package:myapp/services/services.dart';
 
 class AddBeaconPage extends StatefulWidget {
   const AddBeaconPage({super.key});
@@ -9,7 +9,7 @@ class AddBeaconPage extends StatefulWidget {
 }
 
 class _AddBeaconPageState extends State<AddBeaconPage> {
-  final ApiService _apiService = ApiService();
+  final BeaconApiService _apiService = BeaconApiService();
   bool _isSaving = false;
 
   // Controladores

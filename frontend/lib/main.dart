@@ -10,7 +10,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/pages/infoBeacon.dart';
 import 'package:myapp/pages/addBeacon.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:myapp/api_service.dart';
 //import 'package:flutter/widgets.dart';
 
 Future<void> main() async {
